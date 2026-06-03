@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: kitchan-backend
+    ports:
+      - "8888:8888"
+    volumes:
+      - kitchan-uploads:/app/server/uploads
+      - kitchan-db:/app/data
+    environment:
+      - NODE_ENV=production
+      - PORT=8888
+      - JWT_SECRET=${JWT_SECRET:-kitchan-change-this-to-random-string}
+      - DB_PATH=/app/data/kitchan.db
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: kitchan-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  kitchan-uploads:
+  kitchan-db:

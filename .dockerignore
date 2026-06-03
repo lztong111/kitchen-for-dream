@@ -1,0 +1,11 @@
+node_modules
+dist
+*.db
+*.db-shm
+*.db-wal
+.env
+.git
+.gitignore
+README.md
+uploads/*
+!uploads/.gitkeep
