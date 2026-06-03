@@ -28,7 +28,6 @@
 | ORM | Drizzle ORM |
 | 认证 | JWT + bcryptjs |
 | 文件上传 | Multer |
-| 容器化 | Docker |
 
 ## 项目结构
 
@@ -71,9 +70,8 @@ kitchen-for-dream/
 │   └── package.json
 │
 ├── shared/types.ts              # 共享 TypeScript 类型定义
-├── Dockerfile                   # Docker 镜像
-├── docker-compose.yml           # Docker Compose 编排
-└── .env                         # Docker 环境变量
+├── nginx-kitchen.conf           # Nginx 配置文件
+└── deploy.sh                    # 部署脚本
 ```
 
 ---
@@ -148,99 +146,15 @@ npm run dev
 
 ## 服务器部署
 
-### 方式一：Docker 部署（推荐）
-
-#### 环境要求
-
-- Docker >= 20
-- Docker Compose >= 2
-
-#### 部署步骤
-
-**1. 克隆项目到服务器**
-
-```bash
-cd /var/www
-git clone https://github.com/lztong111/kitchen-for-dream.git
-cd kitchen-for-dream
-```
-
-**2. 配置环境变量**
-
-```bash
-# 编辑 .env，修改 JWT_SECRET 为随机强密钥
-vim .env
-```
-
-```env
-JWT_SECRET=your-very-long-random-secret-key-here
-```
-
-**3. 构建并启动容器**
-
-```bash
-docker-compose up -d --build
-```
-
-**4. 验证服务状态**
-
-```bash
-# 查看容器运行状态
-docker-compose ps
-
-# 查看日志
-docker-compose logs -f
-```
-
-**5. 访问应用**
-
-| 服务 | 地址 |
-|------|------|
-| 前端页面 | http://your-server-ip:8888 |
-| 后端 API | http://your-server-ip:8888/api |
-
-#### Docker 常用命令
-
-```bash
-docker-compose up -d            # 启动服务
-docker-compose down             # 停止服务
-docker-compose restart          # 重启所有服务
-docker-compose logs -f          # 查看日志
-docker-compose exec kitchen sh  # 进入容器
-```
-
-#### 数据持久化
-
-Docker 使用 Volume 持久化数据，即使容器重建数据也不会丢失：
-
-| Volume | 容器路径 | 说明 |
-|--------|---------|------|
-| `kitchen-db` | `/app/data/kitchen.db` | SQLite 数据库 |
-| `kitchen-uploads` | `/app/server/uploads` | 上传的图片 |
-
-#### 备份数据
-
-```bash
-# 备份数据库
-docker cp kitchen-for-dream:/app/data/kitchen.db ./kitchen-backup.db
-
-# 备份上传的图片
-docker cp kitchen-for-dream:/app/server/uploads ./uploads-backup
-```
-
----
-
-### 方式二：传统部署（Nginx + PM2）
-
-#### 环境要求
+### 环境要求
 
 - Node.js >= 18
-- Nginx
+- Nginx（已安装）
 - PM2（进程管理）
 
-#### 部署步骤
+### 部署步骤
 
-**1. 安装 Node.js 和 PM2**
+#### 1. 安装 Node.js 和 PM2
 
 ```bash
 # 安装 Node.js 18
@@ -251,7 +165,7 @@ sudo apt install -y nodejs
 npm install -g pm2
 ```
 
-**2. 克隆项目**
+#### 2. 克隆项目
 
 ```bash
 cd /var/www
@@ -259,34 +173,39 @@ git clone https://github.com/lztong111/kitchen-for-dream.git
 cd kitchen-for-dream
 ```
 
-**3. 安装依赖并构建**
+#### 3. 构建前端
 
 ```bash
-# 后端
-cd server && npm install --production
-npm run db:migrate
-npm run db:seed
-cd ..
-
-# 前端
-cd client && npm install && npm run build
+cd client
+npm install
+npm run build
 cd ..
 ```
 
-**4. 配置环境变量**
+构建产物会生成在 `client/dist/` 目录。
+
+#### 4. 安装后端依赖并初始化数据库
 
 ```bash
-# 编辑 server/.env
+cd server
+npm install --production
+npm run db:migrate
+npm run db:seed
+cd ..
+```
+
+#### 5. 配置环境变量
+
+```bash
 vim server/.env
 ```
 
 ```env
-JWT_SECRET=your-very-long-random-secret-key
+JWT_SECRET=修改为一个随机的长字符串
 PORT=8888
-DB_PATH=/var/www/kitchen-for-dream/server/kitchen.db
 ```
 
-**5. 使用 PM2 启动后端**
+#### 6. 使用 PM2 启动后端
 
 ```bash
 pm2 start npx --name "kitchen-server" -- tsx server/src/app.ts
@@ -294,16 +213,34 @@ pm2 save
 pm2 startup
 ```
 
-**6. 配置 Nginx**
+#### 7. 配置 Nginx
+
+将项目中的 `nginx-kitchen.conf` 复制到 Nginx 配置目录：
 
 ```bash
-sudo vim /etc/nginx/sites-available/kitchen
+sudo cp nginx-kitchen.conf /etc/nginx/sites-available/kitchen
+sudo ln -sf /etc/nginx/sites-available/kitchen /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
 ```
+
+Nginx 配置内容（`nginx-kitchen.conf`）：
 
 ```nginx
 server {
     listen 80;
-    server_name your-domain.com;  # 替换为你的域名或 IP
+    server_name kitchen.wgetbt.asia;
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name kitchen.wgetbt.asia;
+
+    ssl_certificate /etc/nginx/ssl/kitchen.wgetbt.asia.pem;
+    ssl_certificate_key /etc/nginx/ssl/kitchen.wgetbt.asia.key;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
 
     client_max_body_size 5M;
 
@@ -324,9 +261,7 @@ server {
 
     # 上传的图片
     location /uploads/ {
-        alias /var/www/kitchen-for-dream/server/uploads/;
-        expires 30d;
-        add_header Cache-Control "public, immutable";
+        proxy_pass http://127.0.0.1:8888;
     }
 
     # 静态资源缓存
@@ -337,30 +272,78 @@ server {
 }
 ```
 
-```bash
-# 启用配置
-sudo ln -s /etc/nginx/sites-available/kitchen /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl restart nginx
+#### 8. SSL 证书
+
+确保 SSL 证书文件存在：
+
+```
+/etc/nginx/ssl/kitchen.wgetbt.asia.pem
+/etc/nginx/ssl/kitchen.wgetbt.asia.key
 ```
 
-**7. 访问应用**
+如果还没有证书，可以使用 acme.sh 申请：
+
+```bash
+curl https://get.acme.sh | sh
+~/.acme.sh/acme.sh --issue -d kitchen.wgetbt.asia --nginx
+~/.acme.sh/acme.sh --installcert -d kitchen.wgetbt.asia \
+  --key-file /etc/nginx/ssl/kitchen.wgetbt.asia.key \
+  --fullchain-file /etc/nginx/ssl/kitchen.wgetbt.asia.pem
+```
+
+#### 9. 访问应用
 
 | 服务 | 地址 |
 |------|------|
-| 前端页面 | http://your-domain.com |
-| 后端 API | http://your-domain.com/api |
+| 前端页面 | https://kitchen.wgetbt.asia |
+| 后端 API | https://kitchen.wgetbt.asia/api |
+
+---
+
+## 常用运维命令
+
+### PM2 命令
+
+```bash
+pm2 list                  # 查看进程状态
+pm2 logs kitchen-server   # 查看后端日志
+pm2 restart kitchen-server # 重启后端
+pm2 stop kitchen-server   # 停止后端
+```
+
+### 更新部署
+
+```bash
+cd /var/www/kitchen-for-dream
+
+# 拉取最新代码
+git pull
+
+# 重新构建前端
+cd client && npm install && npm run build && cd ..
+
+# 重启后端
+pm2 restart kitchen-server
+```
+
+### 数据备份
+
+```bash
+# 备份数据库
+cp /var/www/kitchen-for-dream/server/kitchen.db ./kitchen-backup.db
+
+# 备份上传的图片
+tar -czf uploads-backup.tar.gz /var/www/kitchen-for-dream/server/uploads/
+```
 
 ---
 
 ## 环境变量说明
 
-| 变量 | 位置 | 说明 | 默认值 |
+| 变量 | 文件 | 说明 | 默认值 |
 |------|------|------|--------|
 | `JWT_SECRET` | `server/.env` | JWT 签名密钥，生产环境必须修改 | `kitchen-secret-key` |
 | `PORT` | `server/.env` | 后端服务端口 | `8888` |
-| `DB_PATH` | `server/.env` | SQLite 数据库文件路径 | `./kitchen.db` |
-| `JWT_SECRET` | `docker-compose.yml` | Docker 环境下的 JWT 密钥 | 从 `.env` 读取 |
 
 ---
 
