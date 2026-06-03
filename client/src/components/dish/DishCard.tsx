@@ -24,6 +24,8 @@ export default function DishCard({ dish }: DishCardProps) {
             <img
               src={imageUrl}
               alt={dish.name}
+              loading="lazy"
+              decoding="async"
               className={`w-full h-full object-cover transition-opacity duration-300 ${
                 imgLoaded ? "opacity-100" : "opacity-0"
               }`}

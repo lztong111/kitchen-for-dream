@@ -7,6 +7,7 @@ import {
   Edit,
   Trash2,
   UtensilsCrossed,
+  Heart,
 } from "lucide-react";
 import api from "../api";
 import StarRating from "../components/ui/StarRating";
@@ -20,6 +21,8 @@ export default function DishDetail() {
   const { user } = useAuthStore();
   const [dish, setDish] = useState<Dish | null>(null);
   const [loading, setLoading] = useState(true);
+  const [favorited, setFavorited] = useState(false);
+  const [favCount, setFavCount] = useState(0);
 
   useEffect(() => {
     api
@@ -27,7 +30,19 @@ export default function DishDetail() {
       .then((res) => setDish(res.data.data))
       .catch(() => navigate("/"))
       .finally(() => setLoading(false));
-  }, [id, navigate]);
+
+    api
+      .get<{ data: { count: number } }>(`/favorites/count/${id}`)
+      .then((res) => setFavCount(res.data.data.count))
+      .catch(() => {});
+
+    if (user) {
+      api
+        .get<{ data: { favorited: boolean } }>(`/favorites/check/${id}`)
+        .then((res) => setFavorited(res.data.data.favorited))
+        .catch(() => {});
+    }
+  }, [id, navigate, user]);
 
   const handleDelete = async () => {
     if (!confirm("确定要删除这个菜品吗？")) return;
@@ -36,6 +51,22 @@ export default function DishDetail() {
       navigate("/");
     } catch {
       alert("删除失败");
+    }
+  };
+
+  const handleToggleFavorite = async () => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    try {
+      const res = await api.post<{ data: { favorited: boolean } }>(
+        `/favorites/${id}`
+      );
+      setFavorited(res.data.data.favorited);
+      setFavCount((prev) => (res.data.data.favorited ? prev + 1 : prev - 1));
+    } catch {
+      alert("操作失败");
     }
   };
 
@@ -56,24 +87,38 @@ export default function DishDetail() {
           <span>返回</span>
         </button>
 
-        {isOwner && (
-          <div className="flex gap-2">
-            <Link
-              to={`/dish/${id}/edit`}
-              className="btn-press flex items-center gap-1.5 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 active:bg-blue-700 transition-colors"
-            >
-              <Edit size={16} />
-              <span>编辑</span>
-            </Link>
-            <button
-              onClick={handleDelete}
-              className="btn-press flex items-center gap-1.5 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 active:bg-red-700 transition-colors"
-            >
-              <Trash2 size={16} />
-              <span>删除</span>
-            </button>
-          </div>
-        )}
+        <div className="flex gap-2">
+          <button
+            onClick={handleToggleFavorite}
+            className={`btn-press flex items-center gap-1.5 px-4 py-2 rounded-lg transition-colors ${
+              favorited
+                ? "bg-red-50 text-red-500 border border-red-200"
+                : "bg-gray-50 text-gray-500 border border-gray-200 hover:text-red-500"
+            }`}
+          >
+            <Heart size={16} fill={favorited ? "currentColor" : "none"} />
+            <span>{favCount > 0 ? favCount : "收藏"}</span>
+          </button>
+
+          {isOwner && (
+            <>
+              <Link
+                to={`/dish/${id}/edit`}
+                className="btn-press flex items-center gap-1.5 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 active:bg-blue-700 transition-colors"
+              >
+                <Edit size={16} />
+                <span>编辑</span>
+              </Link>
+              <button
+                onClick={handleDelete}
+                className="btn-press flex items-center gap-1.5 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 active:bg-red-700 transition-colors"
+              >
+                <Trash2 size={16} />
+                <span>删除</span>
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* 菜品图片 */}
@@ -132,7 +177,13 @@ export default function DishDetail() {
 
         {dish.user && (
           <div className="mt-4 pt-4 border-t border-gray-100 text-sm text-gray-400">
-            发布者: {dish.user.username}
+            发布者:{" "}
+            <Link
+              to={`/user/${dish.user.id}`}
+              className="text-orange-500 hover:underline"
+            >
+              {dish.user.username}
+            </Link>
           </div>
         )}
       </div>

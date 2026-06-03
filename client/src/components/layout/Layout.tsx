@@ -35,10 +35,13 @@ export default function Layout() {
                   <Plus size={18} />
                   <span>发布菜品</span>
                 </Link>
-                <div className="flex items-center gap-2 text-gray-600">
+                <Link
+                  to={`/user/${user.id}`}
+                  className="flex items-center gap-2 text-gray-600 hover:text-orange-500 transition-colors"
+                >
                   <User size={18} />
                   <span className="text-sm">{user.username}</span>
-                </div>
+                </Link>
                 <button
                   onClick={handleLogout}
                   className="btn-press flex items-center gap-1.5 px-3 py-2 text-gray-500 hover:text-red-500 transition-colors"

@@ -6,9 +6,9 @@ import { users } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { AuthRequest, authMiddleware } from "../middleware/auth.js";
+import { config } from "../config.js";
 
 const router = Router();
-const JWT_SECRET = process.env.JWT_SECRET || "kitchen-secret-key";
 
 const registerSchema = z.object({
   username: z.string().min(2).max(20),
@@ -46,7 +46,7 @@ router.post("/register", async (req: AuthRequest, res: Response) => {
       .returning()
       .get();
 
-    const token = jwt.sign({ userId: result.id }, JWT_SECRET, {
+    const token = jwt.sign({ userId: result.id }, config.jwtSecret, {
       expiresIn: "7d",
     });
 
@@ -95,7 +95,7 @@ router.post("/login", async (req: AuthRequest, res: Response) => {
       return;
     }
 
-    const token = jwt.sign({ userId: user.id }, JWT_SECRET, {
+    const token = jwt.sign({ userId: user.id }, config.jwtSecret, {
       expiresIn: "7d",
     });
 

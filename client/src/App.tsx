@@ -5,6 +5,8 @@ import DishDetail from "./pages/DishDetail";
 import DishEditor from "./pages/DishEditor";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import UserProfile from "./pages/UserProfile";
+import Settings from "./pages/Settings";
 
 export default function App() {
   return (
@@ -14,6 +16,8 @@ export default function App() {
         <Route path="dish/:id" element={<DishDetail />} />
         <Route path="dish/new" element={<DishEditor />} />
         <Route path="dish/:id/edit" element={<DishEditor />} />
+        <Route path="user/:id" element={<UserProfile />} />
+        <Route path="settings" element={<Settings />} />
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />
       </Route>

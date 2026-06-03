@@ -13,6 +13,7 @@ interface StepForm {
 
 interface IngredientForm {
   ingredient_id: number;
+  ingredient_name: string;
   amount: string;
   unit: string;
 }
@@ -149,7 +150,7 @@ export default function DishEditor() {
   const addIngredient = () => {
     setIngredientForms([
       ...ingredientForms,
-      { ingredient_id: 0, amount: "", unit: "" },
+      { ingredient_id: 0, ingredient_name: "", amount: "", unit: "" },
     ]);
   };
 
@@ -163,8 +164,32 @@ export default function DishEditor() {
     value: string | number
   ) => {
     const newForms = [...ingredientForms];
-    newForms[index][field as "amount" | "unit" | "ingredient_id"] = value as never;
+    newForms[index][field as "amount" | "unit" | "ingredient_id" | "ingredient_name"] = value as never;
     setIngredientForms(newForms);
+  };
+
+  const handleIngredientSelect = async (index: number, name: string) => {
+    const existing = allIngredients.find((i) => i.name === name);
+    if (existing) {
+      const newForms = [...ingredientForms];
+      newForms[index].ingredient_id = existing.id;
+      newForms[index].ingredient_name = existing.name;
+      setIngredientForms(newForms);
+    } else if (name.trim()) {
+      try {
+        const res = await api.post<{ data: Ingredient }>("/ingredients", {
+          name: name.trim(),
+        });
+        const newIngredient = res.data.data;
+        setAllIngredients([...allIngredients, newIngredient]);
+        const newForms = [...ingredientForms];
+        newForms[index].ingredient_id = newIngredient.id;
+        newForms[index].ingredient_name = newIngredient.name;
+        setIngredientForms(newForms);
+      } catch {
+        alert("添加食材失败");
+      }
+    }
   };
 
   const addTag = () => {
@@ -398,20 +423,25 @@ export default function DishEditor() {
           <div className="space-y-3">
             {ingredientForms.map((form, index) => (
               <div key={index} className="flex gap-2 items-center">
-                <select
-                  value={form.ingredient_id}
-                  onChange={(e) =>
-                    updateIngredient(index, "ingredient_id", Number(e.target.value))
-                  }
-                  className="flex-1 px-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:border-orange-400 bg-white text-sm"
-                >
-                  <option value={0}>选择食材</option>
-                  {allIngredients.map((ing) => (
-                    <option key={ing.id} value={ing.id}>
-                      {ing.name}
-                    </option>
-                  ))}
-                </select>
+                <div className="flex-1 relative">
+                  <input
+                    type="text"
+                    list={`ingredient-list-${index}`}
+                    value={form.ingredient_name}
+                    onChange={(e) => {
+                      updateIngredient(index, "ingredient_name", e.target.value);
+                      updateIngredient(index, "ingredient_id", 0);
+                    }}
+                    onBlur={(e) => handleIngredientSelect(index, e.target.value)}
+                    placeholder="输入或选择食材"
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:border-orange-400 text-sm"
+                  />
+                  <datalist id={`ingredient-list-${index}`}>
+                    {allIngredients.map((ing) => (
+                      <option key={ing.id} value={ing.name} />
+                    ))}
+                  </datalist>
+                </div>
                 <input
                   type="text"
                   value={form.amount}

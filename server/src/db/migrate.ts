@@ -60,12 +60,22 @@ export function migrate() {
       name TEXT NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS favorites (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id),
+      dish_id INTEGER NOT NULL REFERENCES dishes(id) ON DELETE CASCADE,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
     CREATE INDEX IF NOT EXISTS idx_dishes_user_id ON dishes(user_id);
     CREATE INDEX IF NOT EXISTS idx_dishes_category_id ON dishes(category_id);
     CREATE INDEX IF NOT EXISTS idx_steps_dish_id ON steps(dish_id);
     CREATE INDEX IF NOT EXISTS idx_dish_ingredients_dish_id ON dish_ingredients(dish_id);
     CREATE INDEX IF NOT EXISTS idx_tags_dish_id ON tags(dish_id);
     CREATE INDEX IF NOT EXISTS idx_tags_name ON tags(name);
+    CREATE INDEX IF NOT EXISTS idx_favorites_user_id ON favorites(user_id);
+    CREATE INDEX IF NOT EXISTS idx_favorites_dish_id ON favorites(dish_id);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_favorites_unique ON favorites(user_id, dish_id);
   `);
 
   console.log("Database migration completed!");

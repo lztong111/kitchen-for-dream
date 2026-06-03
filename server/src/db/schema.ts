@@ -71,3 +71,16 @@ export const tags = sqliteTable("tags", {
     .references(() => dishes.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
 });
+
+export const favorites = sqliteTable("favorites", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  user_id: integer("user_id")
+    .notNull()
+    .references(() => users.id),
+  dish_id: integer("dish_id")
+    .notNull()
+    .references(() => dishes.id, { onDelete: "cascade" }),
+  created_at: text("created_at")
+    .notNull()
+    .$defaultFn(() => new Date().toISOString()),
+});

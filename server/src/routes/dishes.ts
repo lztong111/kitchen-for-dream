@@ -1,5 +1,5 @@
 import { Router, Response } from "express";
-import { db } from "../db/index.js";
+import { db, getRawDb } from "../db/index.js";
 import {
   dishes,
   steps,
@@ -255,63 +255,69 @@ router.get("/:id", (req: AuthRequest, res: Response) => {
   }
 });
 
-// 创建菜品 (需登录)
+// 创建菜品 (需登录，事务保护)
 router.post("/", authMiddleware, (req: AuthRequest, res: Response) => {
   try {
     const data = dishSchema.parse(req.body);
+    const sqlite = getRawDb();
 
-    const result = db
-      .insert(dishes)
-      .values({
-        user_id: req.userId!,
-        name: data.name,
-        description: data.description,
-        image_url: data.image_url,
-        category_id: data.category_id,
-        cook_time: data.cook_time,
-        difficulty: data.difficulty,
-        servings: data.servings,
-      })
-      .returning()
-      .get();
+    const createDish = sqlite.transaction(() => {
+      const result = db
+        .insert(dishes)
+        .values({
+          user_id: req.userId!,
+          name: data.name,
+          description: data.description,
+          image_url: data.image_url,
+          category_id: data.category_id,
+          cook_time: data.cook_time,
+          difficulty: data.difficulty,
+          servings: data.servings,
+        })
+        .returning()
+        .get();
 
-    if (data.steps && data.steps.length > 0) {
-      db.insert(steps)
-        .values(
-          data.steps.map((step, index) => ({
-            dish_id: result.id,
-            step_number: index + 1,
-            description: step.description,
-            image_url: step.image_url,
-          }))
-        )
-        .run();
-    }
+      if (data.steps && data.steps.length > 0) {
+        db.insert(steps)
+          .values(
+            data.steps.map((step, index) => ({
+              dish_id: result.id,
+              step_number: index + 1,
+              description: step.description,
+              image_url: step.image_url,
+            }))
+          )
+          .run();
+      }
 
-    if (data.ingredient_ids && data.ingredient_ids.length > 0) {
-      db.insert(dish_ingredients)
-        .values(
-          data.ingredient_ids.map((ing) => ({
-            dish_id: result.id,
-            ingredient_id: ing.ingredient_id,
-            amount: ing.amount,
-            unit: ing.unit,
-          }))
-        )
-        .run();
-    }
+      if (data.ingredient_ids && data.ingredient_ids.length > 0) {
+        db.insert(dish_ingredients)
+          .values(
+            data.ingredient_ids.map((ing) => ({
+              dish_id: result.id,
+              ingredient_id: ing.ingredient_id,
+              amount: ing.amount,
+              unit: ing.unit,
+            }))
+          )
+          .run();
+      }
 
-    if (data.tag_names && data.tag_names.length > 0) {
-      db.insert(tags)
-        .values(
-          data.tag_names.map((name) => ({
-            dish_id: result.id,
-            name,
-          }))
-        )
-        .run();
-    }
+      if (data.tag_names && data.tag_names.length > 0) {
+        db.insert(tags)
+          .values(
+            data.tag_names.map((name) => ({
+              dish_id: result.id,
+              name,
+            }))
+          )
+          .run();
+      }
 
+      return result;
+    });
+
+    const result = createDish();
     res.json({ success: true, data: result });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -325,7 +331,7 @@ router.post("/", authMiddleware, (req: AuthRequest, res: Response) => {
   }
 });
 
-// 更新菜品 (需登录，只能修改自己的)
+// 更新菜品 (需登录，事务保护)
 router.put("/:id", authMiddleware, (req: AuthRequest, res: Response) => {
   try {
     const id = parseInt(req.params.id);
@@ -347,65 +353,67 @@ router.put("/:id", authMiddleware, (req: AuthRequest, res: Response) => {
       return;
     }
 
-    db.update(dishes)
-      .set({
-        name: data.name,
-        description: data.description,
-        image_url: data.image_url,
-        category_id: data.category_id,
-        cook_time: data.cook_time,
-        difficulty: data.difficulty,
-        servings: data.servings,
-        updated_at: new Date().toISOString(),
-      })
-      .where(eq(dishes.id, id))
-      .run();
+    const sqlite = getRawDb();
 
-    // 重建步骤
-    db.delete(steps).where(eq(steps.dish_id, id)).run();
-    if (data.steps && data.steps.length > 0) {
-      db.insert(steps)
-        .values(
-          data.steps.map((step, index) => ({
-            dish_id: id,
-            step_number: index + 1,
-            description: step.description,
-            image_url: step.image_url,
-          }))
-        )
+    const updateDish = sqlite.transaction(() => {
+      db.update(dishes)
+        .set({
+          name: data.name,
+          description: data.description,
+          image_url: data.image_url,
+          category_id: data.category_id,
+          cook_time: data.cook_time,
+          difficulty: data.difficulty,
+          servings: data.servings,
+          updated_at: new Date().toISOString(),
+        })
+        .where(eq(dishes.id, id))
         .run();
-    }
 
-    // 重建食材
-    db.delete(dish_ingredients)
-      .where(eq(dish_ingredients.dish_id, id))
-      .run();
-    if (data.ingredient_ids && data.ingredient_ids.length > 0) {
-      db.insert(dish_ingredients)
-        .values(
-          data.ingredient_ids.map((ing) => ({
-            dish_id: id,
-            ingredient_id: ing.ingredient_id,
-            amount: ing.amount,
-            unit: ing.unit,
-          }))
-        )
+      db.delete(steps).where(eq(steps.dish_id, id)).run();
+      if (data.steps && data.steps.length > 0) {
+        db.insert(steps)
+          .values(
+            data.steps.map((step, index) => ({
+              dish_id: id,
+              step_number: index + 1,
+              description: step.description,
+              image_url: step.image_url,
+            }))
+          )
+          .run();
+      }
+
+      db.delete(dish_ingredients)
+        .where(eq(dish_ingredients.dish_id, id))
         .run();
-    }
+      if (data.ingredient_ids && data.ingredient_ids.length > 0) {
+        db.insert(dish_ingredients)
+          .values(
+            data.ingredient_ids.map((ing) => ({
+              dish_id: id,
+              ingredient_id: ing.ingredient_id,
+              amount: ing.amount,
+              unit: ing.unit,
+            }))
+          )
+          .run();
+      }
 
-    // 重建标签
-    db.delete(tags).where(eq(tags.dish_id, id)).run();
-    if (data.tag_names && data.tag_names.length > 0) {
-      db.insert(tags)
-        .values(
-          data.tag_names.map((name) => ({
-            dish_id: id,
-            name,
-          }))
-        )
-        .run();
-    }
+      db.delete(tags).where(eq(tags.dish_id, id)).run();
+      if (data.tag_names && data.tag_names.length > 0) {
+        db.insert(tags)
+          .values(
+            data.tag_names.map((name) => ({
+              dish_id: id,
+              name,
+            }))
+          )
+          .run();
+      }
+    });
 
+    updateDish();
     res.json({ success: true, data: { id } });
   } catch (error) {
     if (error instanceof z.ZodError) {
