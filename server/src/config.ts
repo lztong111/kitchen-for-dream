@@ -1,3 +1,5 @@
+import "dotenv/config";
+
 const requiredEnvVars = ["JWT_SECRET"] as const;
 
 for (const envVar of requiredEnvVars) {
