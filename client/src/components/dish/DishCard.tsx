@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Clock, Users } from "lucide-react";
 import StarRating from "../ui/StarRating";
@@ -8,24 +9,27 @@ interface DishCardProps {
 }
 
 export default function DishCard({ dish }: DishCardProps) {
-  const imageUrl = dish.image_url
-    ? dish.image_url.startsWith("http")
-      ? dish.image_url
-      : dish.image_url
-    : null;
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const imageUrl = dish.image_url || null;
 
   return (
     <Link
       to={`/dish/${dish.id}`}
-      className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-100"
+      className="dish-card block bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg border border-gray-100"
     >
-      <div className="aspect-[4/3] bg-gray-100 overflow-hidden">
+      <div className="aspect-[4/3] bg-gray-100 overflow-hidden relative">
         {imageUrl ? (
-          <img
-            src={imageUrl}
-            alt={dish.name}
-            className="w-full h-full object-cover"
-          />
+          <>
+            {!imgLoaded && <div className="absolute inset-0 skeleton" />}
+            <img
+              src={imageUrl}
+              alt={dish.name}
+              className={`w-full h-full object-cover transition-opacity duration-300 ${
+                imgLoaded ? "opacity-100" : "opacity-0"
+              }`}
+              onLoad={() => setImgLoaded(true)}
+            />
+          </>
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-300">
             <span className="text-5xl">🍽️</span>

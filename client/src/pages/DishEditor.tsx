@@ -93,12 +93,12 @@ export default function DishEditor() {
     try {
       const res = await api.post<{ data: { url: string } }>(
         "/upload",
-        formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
+        formData
       );
       return res.data.data.url;
-    } catch {
-      alert("图片上传失败");
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      alert(error.response?.data?.message || "图片上传失败，请检查文件大小（最大5MB）");
       return null;
     } finally {
       setUploading(false);
@@ -560,14 +560,14 @@ export default function DishEditor() {
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="px-6 py-2.5 border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50"
+            className="btn-press px-6 py-2.5 border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors"
           >
             取消
           </button>
           <button
             type="submit"
             disabled={submitting}
-            className="px-6 py-2.5 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50 transition-colors"
+            className="btn-press px-6 py-2.5 bg-orange-500 text-white rounded-lg hover:bg-orange-600 active:bg-orange-700 disabled:opacity-50 transition-colors"
           >
             {submitting ? "保存中..." : isEdit ? "保存修改" : "发布菜品"}
           </button>

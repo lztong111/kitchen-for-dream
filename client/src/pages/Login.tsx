@@ -34,11 +34,11 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-[60vh] flex items-center justify-center">
+    <div className="min-h-[60vh] flex items-center justify-center animate-fade-in">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <ChefHat className="w-12 h-12 text-orange-500 mx-auto mb-3" />
-          <h1 className="text-2xl font-bold text-gray-800">登录 Kitchan</h1>
+          <h1 className="text-2xl font-bold text-gray-800">登录 Kitchen</h1>
           <p className="text-gray-500 mt-1">登录后即可发布你的菜品</p>
         </div>
 
@@ -47,7 +47,7 @@ export default function Login() {
           className="bg-white rounded-xl p-6 shadow-sm space-y-4"
         >
           {error && (
-            <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm">
+            <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm animate-fade-in">
               {error}
             </div>
           )}
@@ -60,7 +60,7 @@ export default function Login() {
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:outline-none focus:border-orange-400"
+              className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:outline-none focus:border-orange-400 transition-colors"
               required
             />
           </div>
@@ -73,7 +73,7 @@ export default function Login() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:outline-none focus:border-orange-400"
+              className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:outline-none focus:border-orange-400 transition-colors"
               required
             />
           </div>
@@ -81,7 +81,7 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50 transition-colors"
+            className="btn-press w-full py-2.5 bg-orange-500 text-white rounded-lg hover:bg-orange-600 active:bg-orange-700 disabled:opacity-50 transition-colors"
           >
             {loading ? "登录中..." : "登录"}
           </button>

@@ -18,3 +18,58 @@ body {
 .star-rating {
   color: #fbbf24;
 }
+
+/* 页面淡入动画 */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* 卡片悬浮效果 */
+.dish-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dish-card:hover {
+  transform: translateY(-4px);
+}
+
+/* 按钮点击效果 */
+.btn-press {
+  transition: all 0.15s ease;
+}
+
+.btn-press:active {
+  transform: scale(0.96);
+}
+
+/* 分类栏滚动条 */
+.filter-scroll::-webkit-scrollbar {
+  height: 0;
+}
+
+/* 骨架屏动画 */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* 图片加载淡入 */
+.img-loading {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.img-loaded {
+  opacity: 1;
+}

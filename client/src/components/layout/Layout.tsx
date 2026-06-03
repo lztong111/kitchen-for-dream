@@ -30,7 +30,7 @@ export default function Layout() {
               <>
                 <Link
                   to="/dish/new"
-                  className="flex items-center gap-1.5 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+                  className="btn-press flex items-center gap-1.5 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 active:bg-orange-700 transition-colors"
                 >
                   <Plus size={18} />
                   <span>发布菜品</span>
@@ -41,7 +41,7 @@ export default function Layout() {
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="flex items-center gap-1.5 px-3 py-2 text-gray-500 hover:text-red-500 transition-colors"
+                  className="btn-press flex items-center gap-1.5 px-3 py-2 text-gray-500 hover:text-red-500 transition-colors"
                 >
                   <LogOut size={18} />
                 </button>
@@ -49,7 +49,7 @@ export default function Layout() {
             ) : (
               <Link
                 to="/login"
-                className="flex items-center gap-1.5 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+                className="btn-press flex items-center gap-1.5 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 active:bg-orange-700 transition-colors"
               >
                 <LogIn size={18} />
                 <span>登录</span>

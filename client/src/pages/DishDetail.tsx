@@ -45,12 +45,12 @@ export default function DishDetail() {
   const isOwner = user && user.id === dish.user_id;
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto animate-fade-in">
       {/* 顶部操作栏 */}
       <div className="flex items-center justify-between mb-6">
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-1 text-gray-500 hover:text-gray-700"
+          className="btn-press flex items-center gap-1 text-gray-500 hover:text-gray-700 transition-colors"
         >
           <ArrowLeft size={20} />
           <span>返回</span>
@@ -60,14 +60,14 @@ export default function DishDetail() {
           <div className="flex gap-2">
             <Link
               to={`/dish/${id}/edit`}
-              className="flex items-center gap-1.5 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+              className="btn-press flex items-center gap-1.5 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 active:bg-blue-700 transition-colors"
             >
               <Edit size={16} />
               <span>编辑</span>
             </Link>
             <button
               onClick={handleDelete}
-              className="flex items-center gap-1.5 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+              className="btn-press flex items-center gap-1.5 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 active:bg-red-700 transition-colors"
             >
               <Trash2 size={16} />
               <span>删除</span>
