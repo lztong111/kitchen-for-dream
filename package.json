@@ -1,5 +1,5 @@
 {
-  "name": "kitchan",
+  "name": "kitchen-for-dream",
   "private": true,
   "scripts": {
     "dev": "concurrently \"pnpm --filter server dev\" \"pnpm --filter client dev\"",

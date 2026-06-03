@@ -8,7 +8,7 @@ import { z } from "zod";
 import { AuthRequest, authMiddleware } from "../middleware/auth.js";
 
 const router = Router();
-const JWT_SECRET = process.env.JWT_SECRET || "kitchan-secret-key";
+const JWT_SECRET = process.env.JWT_SECRET || "kitchen-secret-key";
 
 const registerSchema = z.object({
   username: z.string().min(2).max(20),

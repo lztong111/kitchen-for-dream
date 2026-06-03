@@ -6,7 +6,7 @@ import fs from "fs";
 import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const defaultDbPath = path.join(__dirname, "../../kitchan.db");
+const defaultDbPath = path.join(__dirname, "../../kitchen.db");
 const dbPath = process.env.DB_PATH || defaultDbPath;
 
 const dbDir = path.dirname(dbPath);

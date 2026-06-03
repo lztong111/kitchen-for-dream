@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET || "kitchan-secret-key";
+const JWT_SECRET = process.env.JWT_SECRET || "kitchen-secret-key";
 
 export interface AuthRequest extends Request {
   userId?: number;
