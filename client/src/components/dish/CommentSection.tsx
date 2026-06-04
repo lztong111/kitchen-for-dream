@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { MessageCircle, Star, Trash2, Send } from "lucide-react";
 import { useAuthStore } from "../../stores/auth";
+import LoginPrompt from "../ui/LoginPrompt";
 import api from "../../api";
 import type { Comment } from "shared/types";
 
@@ -11,13 +11,13 @@ interface CommentSectionProps {
 
 export default function CommentSection({ dishId }: CommentSectionProps) {
   const { user } = useAuthStore();
-  const navigate = useNavigate();
   const [comments, setComments] = useState<Comment[]>([]);
   const [total, setTotal] = useState(0);
   const [content, setContent] = useState("");
   const [rating, setRating] = useState<number>(0);
   const [submitting, setSubmitting] = useState(false);
   const [page, setPage] = useState(1);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const limit = 10;
 
   const fetchComments = async () => {
@@ -39,7 +39,7 @@ export default function CommentSection({ dishId }: CommentSectionProps) {
 
   const handleSubmit = async () => {
     if (!user) {
-      navigate("/login");
+      setShowLoginPrompt(true);
       return;
     }
 
@@ -76,6 +76,7 @@ export default function CommentSection({ dishId }: CommentSectionProps) {
   const totalPages = Math.ceil(total / limit);
 
   return (
+    <>
     <div className="bg-white rounded-xl p-6 shadow-sm">
       <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
         <MessageCircle size={20} />
@@ -208,5 +209,11 @@ export default function CommentSection({ dishId }: CommentSectionProps) {
         </div>
       )}
     </div>
+
+    <LoginPrompt
+      open={showLoginPrompt}
+      onClose={() => setShowLoginPrompt(false)}
+    />
+    </>
   );
 }

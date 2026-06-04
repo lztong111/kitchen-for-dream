@@ -15,6 +15,7 @@ import {
 import api from "../api";
 import StarRating from "../components/ui/StarRating";
 import Loading from "../components/ui/Loading";
+import LoginPrompt from "../components/ui/LoginPrompt";
 import CommentSection from "../components/dish/CommentSection";
 import { useAuthStore } from "../stores/auth";
 import type { Dish, UserIngredientItem } from "shared/types";
@@ -29,6 +30,7 @@ export default function DishDetail() {
   const [favCount, setFavCount] = useState(0);
   const [inMenu, setInMenu] = useState(false);
   const [userIngredients, setUserIngredients] = useState<UserIngredientItem[]>([]);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
   useEffect(() => {
     api
@@ -57,6 +59,10 @@ export default function DishDetail() {
         .get<{ data: { items: UserIngredientItem[] } }>(`/user-ingredients`)
         .then((res) => setUserIngredients(res.data.data.items))
         .catch(() => {});
+    } else {
+      setFavorited(false);
+      setInMenu(false);
+      setUserIngredients([]);
     }
   }, [id, navigate, user]);
 
@@ -72,7 +78,7 @@ export default function DishDetail() {
 
   const handleToggleFavorite = async () => {
     if (!user) {
-      navigate("/login");
+      setShowLoginPrompt(true);
       return;
     }
     try {
@@ -88,7 +94,7 @@ export default function DishDetail() {
 
   const handleToggleMenu = async () => {
     if (!user) {
-      navigate("/login");
+      setShowLoginPrompt(true);
       return;
     }
     try {
@@ -311,6 +317,11 @@ export default function DishDetail() {
 
       {/* 评论区 */}
       <CommentSection dishId={parseInt(id!)} />
+
+      <LoginPrompt
+        open={showLoginPrompt}
+        onClose={() => setShowLoginPrompt(false)}
+      />
     </div>
   );
 }

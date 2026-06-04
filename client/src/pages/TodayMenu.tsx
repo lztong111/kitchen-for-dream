@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import api from "../api";
 import Loading from "../components/ui/Loading";
+import LoginPrompt from "../components/ui/LoginPrompt";
 import { useAuthStore } from "../stores/auth";
 import type { Dish, DailyMenuResponse } from "shared/types";
 
@@ -17,6 +18,7 @@ export default function TodayMenu() {
   const navigate = useNavigate();
   const [data, setData] = useState<DailyMenuResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
   const fetchMenu = async () => {
     setLoading(true);
@@ -32,11 +34,12 @@ export default function TodayMenu() {
 
   useEffect(() => {
     if (!user) {
-      navigate("/login");
+      setShowLoginPrompt(true);
+      setLoading(false);
       return;
     }
     fetchMenu();
-  }, [user, navigate]);
+  }, [user]);
 
   const handleRemove = async (dishId: number) => {
     try {
@@ -212,6 +215,14 @@ export default function TodayMenu() {
           )}
         </>
       )}
+
+      <LoginPrompt
+        open={showLoginPrompt}
+        onClose={() => {
+          setShowLoginPrompt(false);
+          if (!user) navigate("/");
+        }}
+      />
     </div>
   );
 }

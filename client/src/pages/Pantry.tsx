@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import api from "../api";
 import Loading from "../components/ui/Loading";
+import LoginPrompt from "../components/ui/LoginPrompt";
 import { useAuthStore } from "../stores/auth";
 import type { Ingredient, UserIngredientItem } from "shared/types";
 
@@ -25,6 +26,7 @@ export default function Pantry() {
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [search, setSearch] = useState("");
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
   const fetchPantry = async () => {
     try {
@@ -40,7 +42,8 @@ export default function Pantry() {
 
   useEffect(() => {
     if (!user) {
-      navigate("/login");
+      setShowLoginPrompt(true);
+      setLoading(false);
       return;
     }
 
@@ -223,6 +226,14 @@ export default function Pantry() {
           ))}
         </div>
       )}
+
+      <LoginPrompt
+        open={showLoginPrompt}
+        onClose={() => {
+          setShowLoginPrompt(false);
+          if (!user) navigate("/");
+        }}
+      />
     </div>
   );
 }
