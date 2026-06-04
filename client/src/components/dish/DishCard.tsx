@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Clock, Users, Plus, Check } from "lucide-react";
 import StarRating from "../ui/StarRating";
@@ -14,10 +14,19 @@ interface DishCardProps {
 export default function DishCard({ dish, onMenuChange }: DishCardProps) {
   const [imgLoaded, setImgLoaded] = useState(false);
   const [inMenu, setInMenu] = useState(false);
-  const [checking, setChecking] = useState(false);
+  const [toggling, setToggling] = useState(false);
   const { user } = useAuthStore();
   const navigate = useNavigate();
   const imageUrl = dish.image_url || null;
+
+  // 初始化时检查是否在今日菜单中
+  useEffect(() => {
+    if (!user) return;
+    api
+      .get<{ data: { added: boolean } }>(`/menu/check/${dish.id}`)
+      .then((res) => setInMenu(res.data.data.added))
+      .catch(() => {});
+  }, [user, dish.id]);
 
   const handleToggleMenu = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -28,8 +37,8 @@ export default function DishCard({ dish, onMenuChange }: DishCardProps) {
       return;
     }
 
-    if (checking) return;
-    setChecking(true);
+    if (toggling) return;
+    setToggling(true);
 
     try {
       const res = await api.post<{ data: { added: boolean } }>(
@@ -40,7 +49,7 @@ export default function DishCard({ dish, onMenuChange }: DishCardProps) {
     } catch {
       alert("操作失败");
     } finally {
-      setChecking(false);
+      setToggling(false);
     }
   };
 
@@ -69,6 +78,18 @@ export default function DishCard({ dish, onMenuChange }: DishCardProps) {
             <span className="text-5xl">🍽️</span>
           </div>
         )}
+
+        {/* 右上角 + 按钮 */}
+        <button
+          onClick={handleToggleMenu}
+          className={`absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-all ${
+            inMenu
+              ? "bg-green-500 text-white"
+              : "bg-white/90 text-orange-500 hover:bg-white border border-gray-200"
+          }`}
+        >
+          {inMenu ? <Check size={16} /> : <Plus size={16} />}
+        </button>
       </div>
 
       <div className="p-4">
@@ -110,18 +131,6 @@ export default function DishCard({ dish, onMenuChange }: DishCardProps) {
           </div>
         )}
       </div>
-
-      {/* 右下角 + 按钮 */}
-      <button
-        onClick={handleToggleMenu}
-        className={`absolute bottom-3 right-3 w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-all ${
-          inMenu
-            ? "bg-green-500 text-white"
-            : "bg-white text-orange-500 hover:bg-orange-50 border border-gray-200"
-        }`}
-      >
-        {inMenu ? <Check size={16} /> : <Plus size={16} />}
-      </button>
     </Link>
   );
 }
