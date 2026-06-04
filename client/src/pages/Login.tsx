@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { ChefHat } from "lucide-react";
 import api from "../api";
 import { useAuthStore } from "../stores/auth";
+import { toast } from "../components/ui/Toast";
 import type { AuthResponse } from "shared/types";
 
 export default function Login() {
@@ -24,6 +25,7 @@ export default function Login() {
         password,
       });
       setAuth(res.data.data.user, res.data.data.token);
+      toast.success("登录成功");
       navigate("/");
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
@@ -38,42 +40,46 @@ export default function Login() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <ChefHat className="w-12 h-12 text-orange-500 mx-auto mb-3" />
-          <h1 className="text-2xl font-bold text-gray-800">登录 Kitchen</h1>
-          <p className="text-gray-500 mt-1">登录后即可发布你的菜品</p>
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
+            登录 Kitchan
+          </h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">
+            登录后即可发布你的菜品
+          </p>
         </div>
 
         <form
           onSubmit={handleSubmit}
-          className="bg-white rounded-xl p-6 shadow-sm space-y-4"
+          className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm space-y-4"
         >
           {error && (
-            <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm animate-fade-in">
+            <div className="p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg text-sm animate-fade-in">
               {error}
             </div>
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               用户名
             </label>
             <input
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:outline-none focus:border-orange-400 transition-colors"
+              className="w-full px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 focus:outline-none focus:border-orange-400 transition-colors"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               密码
             </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:outline-none focus:border-orange-400 transition-colors"
+              className="w-full px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 focus:outline-none focus:border-orange-400 transition-colors"
               required
             />
           </div>
@@ -86,7 +92,7 @@ export default function Login() {
             {loading ? "登录中..." : "登录"}
           </button>
 
-          <p className="text-center text-sm text-gray-500">
+          <p className="text-center text-sm text-gray-500 dark:text-gray-400">
             还没有账号？{" "}
             <Link to="/register" className="text-orange-500 hover:underline">
               注册

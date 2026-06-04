@@ -9,6 +9,8 @@ import UserProfile from "./pages/UserProfile";
 import Settings from "./pages/Settings";
 import TodayMenu from "./pages/TodayMenu";
 import Pantry from "./pages/Pantry";
+import Favorites from "./pages/Favorites";
+import NotFound from "./pages/NotFound";
 
 export default function App() {
   return (
@@ -19,11 +21,13 @@ export default function App() {
         <Route path="dish/new" element={<DishEditor />} />
         <Route path="dish/:id/edit" element={<DishEditor />} />
         <Route path="user/:id" element={<UserProfile />} />
+        <Route path="favorites" element={<Favorites />} />
         <Route path="settings" element={<Settings />} />
         <Route path="menu/today" element={<TodayMenu />} />
         <Route path="pantry" element={<Pantry />} />
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />
+        <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
   );

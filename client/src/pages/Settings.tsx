@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Lock, ArrowLeft } from "lucide-react";
+import { Lock, ArrowLeft, Moon, Sun } from "lucide-react";
 import api from "../api";
+import { toast } from "../components/ui/Toast";
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -11,6 +12,24 @@ export default function Settings() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
+
+  useEffect(() => {
+    const isDark = localStorage.getItem("darkMode") === "true";
+    setDarkMode(isDark);
+  }, []);
+
+  const toggleDarkMode = () => {
+    const newMode = !darkMode;
+    setDarkMode(newMode);
+    localStorage.setItem("darkMode", String(newMode));
+    if (newMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+    toast.success(newMode ? "已切换到暗色模式" : "已切换到亮色模式");
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,6 +53,7 @@ export default function Settings() {
         new_password: newPassword,
       });
       setSuccess("密码修改成功");
+      toast.success("密码修改成功");
       setOldPassword("");
       setNewPassword("");
       setConfirmPassword("");
@@ -55,39 +75,76 @@ export default function Settings() {
         <span>返回</span>
       </button>
 
-      <div className="bg-white rounded-xl p-6 shadow-sm">
-        <h1 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+      {/* 外观设置 */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm mb-4">
+        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
+          外观设置
+        </h2>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {darkMode ? (
+              <Moon size={20} className="text-blue-400" />
+            ) : (
+              <Sun size={20} className="text-yellow-500" />
+            )}
+            <div>
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                暗色模式
+              </p>
+              <p className="text-xs text-gray-400">
+                {darkMode ? "当前为暗色主题" : "当前为亮色主题"}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={toggleDarkMode}
+            className={`relative w-12 h-6 rounded-full transition-colors ${
+              darkMode ? "bg-blue-500" : "bg-gray-300"
+            }`}
+          >
+            <div
+              className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                darkMode ? "translate-x-6" : "translate-x-0.5"
+              }`}
+            />
+          </button>
+        </div>
+      </div>
+
+      {/* 修改密码 */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+        <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-2">
           <Lock size={20} />
           修改密码
         </h1>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm animate-fade-in">
+            <div className="p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg text-sm animate-fade-in">
               {error}
             </div>
           )}
           {success && (
-            <div className="p-3 bg-green-50 text-green-600 rounded-lg text-sm animate-fade-in">
+            <div className="p-3 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-lg text-sm animate-fade-in">
               {success}
             </div>
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               原密码
             </label>
             <input
               type="password"
               value={oldPassword}
               onChange={(e) => setOldPassword(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:outline-none focus:border-orange-400 transition-colors"
+              className="w-full px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 focus:outline-none focus:border-orange-400 transition-colors"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               新密码
             </label>
             <input
@@ -95,13 +152,13 @@ export default function Settings() {
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               placeholder="至少6位"
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:outline-none focus:border-orange-400 transition-colors"
+              className="w-full px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 focus:outline-none focus:border-orange-400 transition-colors"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               确认新密码
             </label>
             <input
@@ -109,7 +166,7 @@ export default function Settings() {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="再次输入新密码"
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:outline-none focus:border-orange-400 transition-colors"
+              className="w-full px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 focus:outline-none focus:border-orange-400 transition-colors"
               required
             />
           </div>

@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { ChefHat } from "lucide-react";
 import api from "../api";
 import { useAuthStore } from "../stores/auth";
+import { toast } from "../components/ui/Toast";
 import type { AuthResponse } from "shared/types";
 
 export default function Register() {
@@ -36,6 +37,7 @@ export default function Register() {
         password,
       });
       setAuth(res.data.data.user, res.data.data.token);
+      toast.success("注册成功");
       navigate("/");
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
@@ -50,22 +52,26 @@ export default function Register() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <ChefHat className="w-12 h-12 text-orange-500 mx-auto mb-3" />
-          <h1 className="text-2xl font-bold text-gray-800">注册 Kitchen</h1>
-          <p className="text-gray-500 mt-1">创建账号，开始分享你的菜谱</p>
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
+            注册 Kitchan
+          </h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">
+            创建账号，开始分享你的菜谱
+          </p>
         </div>
 
         <form
           onSubmit={handleSubmit}
-          className="bg-white rounded-xl p-6 shadow-sm space-y-4"
+          className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm space-y-4"
         >
           {error && (
-            <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm animate-fade-in">
+            <div className="p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg text-sm animate-fade-in">
               {error}
             </div>
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               用户名
             </label>
             <input
@@ -73,13 +79,13 @@ export default function Register() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="2-20个字符"
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:outline-none focus:border-orange-400 transition-colors"
+              className="w-full px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 focus:outline-none focus:border-orange-400 transition-colors"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               密码
             </label>
             <input
@@ -87,13 +93,13 @@ export default function Register() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="至少6位"
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:outline-none focus:border-orange-400 transition-colors"
+              className="w-full px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 focus:outline-none focus:border-orange-400 transition-colors"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               确认密码
             </label>
             <input
@@ -101,7 +107,7 @@ export default function Register() {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="再次输入密码"
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:outline-none focus:border-orange-400 transition-colors"
+              className="w-full px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 focus:outline-none focus:border-orange-400 transition-colors"
               required
             />
           </div>
@@ -114,7 +120,7 @@ export default function Register() {
             {loading ? "注册中..." : "注册"}
           </button>
 
-          <p className="text-center text-sm text-gray-500">
+          <p className="text-center text-sm text-gray-500 dark:text-gray-400">
             已有账号？{" "}
             <Link to="/login" className="text-orange-500 hover:underline">
               登录

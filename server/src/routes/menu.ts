@@ -18,12 +18,18 @@ function getTodayDate(): string {
   return new Date().toISOString().split("T")[0];
 }
 
-// Toggle 今日菜单（加入/移除）
+function getDateParam(req: AuthRequest): string {
+  const date = req.query.date as string || req.body?.date;
+  if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) return date;
+  return getTodayDate();
+}
+
+// Toggle 菜单（加入/移除）
 router.post("/:dishId", authMiddleware, (req: AuthRequest, res: Response) => {
   try {
     const dishId = parseInt(req.params.dishId);
     const userId = req.userId!;
-    const today = getTodayDate();
+    const date = getDateParam(req);
 
     const dish = db.select().from(dishes).where(eq(dishes.id, dishId)).get();
     if (!dish) {
@@ -38,7 +44,7 @@ router.post("/:dishId", authMiddleware, (req: AuthRequest, res: Response) => {
         and(
           eq(daily_menus.user_id, userId),
           eq(daily_menus.dish_id, dishId),
-          eq(daily_menus.date, today)
+          eq(daily_menus.date, date)
         )
       )
       .get();
@@ -49,14 +55,14 @@ router.post("/:dishId", authMiddleware, (req: AuthRequest, res: Response) => {
           and(
             eq(daily_menus.user_id, userId),
             eq(daily_menus.dish_id, dishId),
-            eq(daily_menus.date, today)
+            eq(daily_menus.date, date)
           )
         )
         .run();
       res.json({ success: true, data: { added: false } });
     } else {
       db.insert(daily_menus)
-        .values({ user_id: userId, dish_id: dishId, date: today })
+        .values({ user_id: userId, dish_id: dishId, date })
         .run();
       res.json({ success: true, data: { added: true } });
     }
@@ -66,17 +72,17 @@ router.post("/:dishId", authMiddleware, (req: AuthRequest, res: Response) => {
   }
 });
 
-// 获取今日菜单（含食材汇总 + 总时间）
+// 获取菜单（含食材汇总 + 总时间）
 router.get("/today", authMiddleware, (req: AuthRequest, res: Response) => {
   try {
     const userId = req.userId!;
-    const today = getTodayDate();
+    const date = getDateParam(req);
 
     const menuItems = db
       .select()
       .from(daily_menus)
       .where(
-        and(eq(daily_menus.user_id, userId), eq(daily_menus.date, today))
+        and(eq(daily_menus.user_id, userId), eq(daily_menus.date, date))
       )
       .orderBy(desc(daily_menus.created_at))
       .all();
@@ -91,13 +97,9 @@ router.get("/today", authMiddleware, (req: AuthRequest, res: Response) => {
       return;
     }
 
-    // 获取菜品详情
     const dishList = db.select().from(dishes).where(inArray(dishes.id, dishIds)).all();
-
-    // 获取步骤
     const allSteps = db.select().from(steps).where(inArray(steps.dish_id, dishIds)).all();
 
-    // 获取食材
     const allDishIngredients = db
       .select({
         id: dish_ingredients.id,
@@ -113,10 +115,8 @@ router.get("/today", authMiddleware, (req: AuthRequest, res: Response) => {
       .where(inArray(dish_ingredients.dish_id, dishIds))
       .all();
 
-    // 获取标签
     const allTags = db.select().from(tags).where(inArray(tags.dish_id, dishIds)).all();
 
-    // 获取分类
     const categoryIds = [...new Set(dishList.map((d) => d.category_id).filter(Boolean))];
     let dishCategories: typeof categories.$inferSelect[] = [];
     if (categoryIds.length > 0) {
@@ -127,7 +127,6 @@ router.get("/today", authMiddleware, (req: AuthRequest, res: Response) => {
         .all();
     }
 
-    // 组装菜品数据
     const enrichedDishes = dishList.map((dish) => ({
       ...dish,
       category: dishCategories.find((c) => c.id === dish.category_id),
@@ -151,13 +150,11 @@ router.get("/today", authMiddleware, (req: AuthRequest, res: Response) => {
         })),
     }));
 
-    // 计算总烹饪时间
     const total_cook_time = dishList.reduce(
       (sum, d) => sum + (d.cook_time || 0),
       0
     );
 
-    // 食材汇总（合并同名食材）
     const ingredientMap = new Map<string, string[]>();
     for (const di of allDishIngredients) {
       const name = di.ingredient_name || "未知食材";
@@ -185,16 +182,16 @@ router.get("/today", authMiddleware, (req: AuthRequest, res: Response) => {
     });
   } catch (error) {
     console.error("Get daily menu error:", error);
-    res.status(500).json({ success: false, message: "获取今日菜单失败" });
+    res.status(500).json({ success: false, message: "获取菜单失败" });
   }
 });
 
-// 检查菜品是否在今日菜单
+// 检查菜品是否在菜单中
 router.get("/check/:dishId", authMiddleware, (req: AuthRequest, res: Response) => {
   try {
     const dishId = parseInt(req.params.dishId);
     const userId = req.userId!;
-    const today = getTodayDate();
+    const date = getDateParam(req);
 
     const existing = db
       .select()
@@ -203,7 +200,7 @@ router.get("/check/:dishId", authMiddleware, (req: AuthRequest, res: Response) =
         and(
           eq(daily_menus.user_id, userId),
           eq(daily_menus.dish_id, dishId),
-          eq(daily_menus.date, today)
+          eq(daily_menus.date, date)
         )
       )
       .get();
@@ -215,19 +212,19 @@ router.get("/check/:dishId", authMiddleware, (req: AuthRequest, res: Response) =
   }
 });
 
-// 清空今日菜单
+// 清空菜单
 router.delete("/today", authMiddleware, (req: AuthRequest, res: Response) => {
   try {
     const userId = req.userId!;
-    const today = getTodayDate();
+    const date = getDateParam(req);
 
     db.delete(daily_menus)
       .where(
-        and(eq(daily_menus.user_id, userId), eq(daily_menus.date, today))
+        and(eq(daily_menus.user_id, userId), eq(daily_menus.date, date))
       )
       .run();
 
-    res.json({ success: true, message: "已清空今日菜单" });
+    res.json({ success: true, message: "已清空菜单" });
   } catch (error) {
     console.error("Clear daily menu error:", error);
     res.status(500).json({ success: false, message: "清空失败" });

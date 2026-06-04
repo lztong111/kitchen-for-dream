@@ -11,6 +11,7 @@ import api from "../api";
 import Loading from "../components/ui/Loading";
 import LoginPrompt from "../components/ui/LoginPrompt";
 import { useAuthStore } from "../stores/auth";
+import { toast } from "../components/ui/Toast";
 import type { Ingredient, UserIngredientItem } from "shared/types";
 
 interface GroupedItems {
@@ -51,14 +52,15 @@ export default function Pantry() {
       fetchPantry(),
       api.get<{ data: Ingredient[] }>("/ingredients").then((res) => setAllIngredients(res.data.data)),
     ]).finally(() => setLoading(false));
-  }, [user, navigate]);
+  }, [user]);
 
   const handleAddById = async (ingredientId: number) => {
     try {
       await api.post("/user-ingredients", { ingredient_id: ingredientId });
       fetchPantry();
+      toast.success("已添加");
     } catch {
-      alert("添加失败");
+      toast.error("添加失败");
     }
   };
 
@@ -68,8 +70,9 @@ export default function Pantry() {
       await api.post("/user-ingredients", { name: name.trim() });
       setSearch("");
       fetchPantry();
+      toast.success("已添加");
     } catch {
-      alert("添加失败");
+      toast.error("添加失败");
     }
   };
 
@@ -77,8 +80,9 @@ export default function Pantry() {
     try {
       await api.delete(`/user-ingredients/${ingredientId}`);
       fetchPantry();
+      toast.success("已移除");
     } catch {
-      alert("移除失败");
+      toast.error("移除失败");
     }
   };
 
@@ -114,7 +118,7 @@ export default function Pantry() {
           <ArrowLeft size={20} />
           <span>返回</span>
         </button>
-        <h1 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+        <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
           <Refrigerator size={24} className="text-orange-500" />
           我的食材库
         </h1>
@@ -129,7 +133,7 @@ export default function Pantry() {
 
       {/* 添加食材面板 */}
       {showAdd && (
-        <div className="bg-white rounded-xl p-4 mb-6 shadow-sm">
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 mb-6 shadow-sm">
           <div className="relative mb-3">
             <Search
               className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
@@ -145,7 +149,7 @@ export default function Pantry() {
                 }
               }}
               placeholder="搜索或输入自定义食材名称..."
-              className="w-full pl-9 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:border-orange-400 text-sm"
+              className="w-full pl-9 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 focus:outline-none focus:border-orange-400 text-sm"
             />
           </div>
 
@@ -154,7 +158,7 @@ export default function Pantry() {
             {search.trim() && !hasExactMatch && (
               <button
                 onClick={() => handleAddByName(search)}
-                className="w-full px-4 py-2 bg-orange-50 text-orange-600 rounded-lg text-sm hover:bg-orange-100 transition-colors text-left"
+                className="w-full px-4 py-2 bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 rounded-lg text-sm hover:bg-orange-100 dark:hover:bg-orange-900/50 transition-colors text-left"
               >
                 + 添加自定义食材「{search.trim()}」
               </button>
@@ -169,7 +173,7 @@ export default function Pantry() {
                     <button
                       key={ing.id}
                       onClick={() => handleAddById(ing.id)}
-                      className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm hover:bg-orange-100 hover:text-orange-600 transition-colors"
+                      className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full text-sm hover:bg-orange-100 dark:hover:bg-orange-900/30 hover:text-orange-600 transition-colors"
                     >
                       + {ing.name}
                     </button>
@@ -202,15 +206,18 @@ export default function Pantry() {
       ) : (
         <div className="space-y-4">
           {Object.entries(grouped).map(([cat, catItems]) => (
-            <div key={cat} className="bg-white rounded-xl p-4 shadow-sm">
-              <h3 className="text-sm font-medium text-gray-500 mb-3">
+            <div
+              key={cat}
+              className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm"
+            >
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">
                 {cat}
               </h3>
               <div className="flex flex-wrap gap-2">
                 {catItems.map((item) => (
                   <span
                     key={item.id}
-                    className="flex items-center gap-1 px-3 py-1.5 bg-green-50 text-green-700 rounded-full text-sm"
+                    className="flex items-center gap-1 px-3 py-1.5 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-sm"
                   >
                     {item.ingredient_name}
                     <button

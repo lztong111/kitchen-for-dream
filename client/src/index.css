@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --primary: #f97316;
   --primary-hover: #ea580c;
@@ -13,6 +15,10 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: #f9fafb;
+}
+
+.dark body {
+  background-color: #111827;
 }
 
 .star-rating {
@@ -47,11 +53,6 @@ body {
   transform: scale(0.96);
 }
 
-/* 分类栏滚动条 */
-.filter-scroll::-webkit-scrollbar {
-  height: 0;
-}
-
 /* 骨架屏动画 */
 @keyframes shimmer {
   0% { background-position: -200% 0; }
@@ -62,14 +63,35 @@ body {
   background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
+  border-radius: 0.5rem;
 }
 
-/* 图片加载淡入 */
-.img-loading {
-  opacity: 0;
-  transition: opacity 0.3s ease;
+.dark .skeleton {
+  background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
+  background-size: 200% 100%;
 }
 
-.img-loaded {
-  opacity: 1;
+/* 暗色模式切换过渡 */
+* {
+  transition-property: background-color, border-color, color;
+  transition-duration: 0ms;
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #4b5563;
 }
