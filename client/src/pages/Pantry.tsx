@@ -50,9 +50,20 @@ export default function Pantry() {
     ]).finally(() => setLoading(false));
   }, [user, navigate]);
 
-  const handleAdd = async (ingredientId: number) => {
+  const handleAddById = async (ingredientId: number) => {
     try {
       await api.post("/user-ingredients", { ingredient_id: ingredientId });
+      fetchPantry();
+    } catch {
+      alert("添加失败");
+    }
+  };
+
+  const handleAddByName = async (name: string) => {
+    if (!name.trim()) return;
+    try {
+      await api.post("/user-ingredients", { name: name.trim() });
+      setSearch("");
       fetchPantry();
     } catch {
       alert("添加失败");
@@ -82,6 +93,10 @@ export default function Pantry() {
     if (!groupedFiltered[cat]) groupedFiltered[cat] = [];
     groupedFiltered[cat].push(ing);
   }
+
+  const hasExactMatch = allIngredients.some(
+    (i) => i.name === search.trim()
+  );
 
   if (loading) return <Loading />;
 
@@ -121,11 +136,28 @@ export default function Pantry() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="搜索食材..."
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && search.trim()) {
+                  handleAddByName(search);
+                }
+              }}
+              placeholder="搜索或输入自定义食材名称..."
               className="w-full pl-9 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:border-orange-400 text-sm"
             />
           </div>
+
           <div className="max-h-60 overflow-y-auto space-y-3">
+            {/* 自定义添加按钮 */}
+            {search.trim() && !hasExactMatch && (
+              <button
+                onClick={() => handleAddByName(search)}
+                className="w-full px-4 py-2 bg-orange-50 text-orange-600 rounded-lg text-sm hover:bg-orange-100 transition-colors text-left"
+              >
+                + 添加自定义食材「{search.trim()}」
+              </button>
+            )}
+
+            {/* 预设食材列表 */}
             {Object.entries(groupedFiltered).map(([cat, ings]) => (
               <div key={cat}>
                 <p className="text-xs font-medium text-gray-400 mb-1">{cat}</p>
@@ -133,7 +165,7 @@ export default function Pantry() {
                   {ings.map((ing) => (
                     <button
                       key={ing.id}
-                      onClick={() => handleAdd(ing.id)}
+                      onClick={() => handleAddById(ing.id)}
                       className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm hover:bg-orange-100 hover:text-orange-600 transition-colors"
                     >
                       + {ing.name}
@@ -142,9 +174,10 @@ export default function Pantry() {
                 </div>
               </div>
             ))}
-            {Object.keys(groupedFiltered).length === 0 && (
+
+            {Object.keys(groupedFiltered).length === 0 && !search.trim() && (
               <p className="text-center text-gray-400 text-sm py-4">
-                {search ? "没有匹配的食材" : "所有食材都已添加"}
+                所有预设食材都已添加
               </p>
             )}
           </div>

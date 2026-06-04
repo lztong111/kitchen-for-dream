@@ -42,24 +42,41 @@ router.get("/", authMiddleware, (req: AuthRequest, res: Response) => {
   }
 });
 
-// 添加食材到我的库
+// 添加食材到我的库（支持 ingredient_id 或自定义 name）
 router.post("/", authMiddleware, (req: AuthRequest, res: Response) => {
   try {
     const userId = req.userId!;
     const schema = z.object({
-      ingredient_id: z.number(),
+      ingredient_id: z.number().optional(),
+      name: z.string().min(1).max(50).optional(),
+      category: z.string().max(50).optional(),
     });
 
-    const { ingredient_id } = schema.parse(req.body);
+    const data = schema.parse(req.body);
+    let ingredientId = data.ingredient_id;
 
-    const ingredient = db
-      .select()
-      .from(ingredients)
-      .where(eq(ingredients.id, ingredient_id))
-      .get();
+    // 如果传了 name，先查找或创建食材
+    if (!ingredientId && data.name) {
+      const existing = db
+        .select()
+        .from(ingredients)
+        .where(eq(ingredients.name, data.name))
+        .get();
 
-    if (!ingredient) {
-      res.status(404).json({ success: false, message: "食材不存在" });
+      if (existing) {
+        ingredientId = existing.id;
+      } else {
+        const newIngredient = db
+          .insert(ingredients)
+          .values({ name: data.name, category: data.category || "自定义" })
+          .returning()
+          .get();
+        ingredientId = newIngredient.id;
+      }
+    }
+
+    if (!ingredientId) {
+      res.status(400).json({ success: false, message: "请提供 ingredient_id 或 name" });
       return;
     }
 
@@ -69,7 +86,7 @@ router.post("/", authMiddleware, (req: AuthRequest, res: Response) => {
       .where(
         and(
           eq(user_ingredients.user_id, userId),
-          eq(user_ingredients.ingredient_id, ingredient_id)
+          eq(user_ingredients.ingredient_id, ingredientId)
         )
       )
       .get();
@@ -81,8 +98,14 @@ router.post("/", authMiddleware, (req: AuthRequest, res: Response) => {
 
     const result = db
       .insert(user_ingredients)
-      .values({ user_id: userId, ingredient_id })
+      .values({ user_id: userId, ingredient_id: ingredientId })
       .returning()
+      .get();
+
+    const ingredient = db
+      .select()
+      .from(ingredients)
+      .where(eq(ingredients.id, ingredientId))
       .get();
 
     res.json({ success: true, data: { ...result, ingredient } });
