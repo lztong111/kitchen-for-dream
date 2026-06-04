@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useSearchParams, Link } from "react-router-dom";
 import {
   Search,
   SlidersHorizontal,
@@ -6,6 +7,8 @@ import {
   ChevronUp,
   ArrowUpDown,
   Hash,
+  Calendar,
+  X,
 } from "lucide-react";
 import api from "../api";
 import DishCard from "../components/dish/DishCard";
@@ -15,6 +18,8 @@ import type { Dish, Category, DishListResponse } from "shared/types";
 type SortKey = "newest" | "cook_time" | "difficulty";
 
 export default function Home() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const menuDate = searchParams.get("date") || "";
   const [dishes, setDishes] = useState<Dish[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [popularTags, setPopularTags] = useState<{ name: string; count: number }[]>([]);
@@ -140,6 +145,35 @@ export default function Home() {
           />
         </div>
       </div>
+
+      {/* 日期模式横幅 */}
+      {menuDate && (
+        <div className="mb-4 flex items-center justify-between bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-4 py-2.5 rounded-xl animate-fade-in">
+          <div className="flex items-center gap-2">
+            <Calendar size={16} />
+            <span className="text-sm">
+              正在为 <strong>{new Date(menuDate).toLocaleDateString("zh-CN", { month: "long", day: "numeric", weekday: "short" })}</strong> 挑选菜品
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link
+              to="/menu/today"
+              className="text-xs underline hover:no-underline"
+            >
+              查看菜单
+            </Link>
+            <button
+              onClick={() => {
+                searchParams.delete("date");
+                setSearchParams(searchParams);
+              }}
+              className="text-blue-400 hover:text-blue-600 transition-colors"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 筛选栏 - 吸顶 */}
       <div ref={filterRef}>
@@ -328,7 +362,7 @@ export default function Home() {
                 style={{ animationDelay: `${i * 50}ms` }}
                 className="animate-fade-in"
               >
-                <DishCard dish={dish} />
+                <DishCard dish={dish} menuDate={menuDate || undefined} />
               </div>
             ))}
           </div>

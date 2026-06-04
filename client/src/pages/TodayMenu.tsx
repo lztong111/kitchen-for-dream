@@ -133,16 +133,22 @@ export default function TodayMenu() {
           <ChefHat size={24} className="text-orange-500" />
           菜单
         </h1>
-        {data && data.count > 0 ? (
-          <button
-            onClick={() => setShowClearConfirm(true)}
-            className="btn-press text-sm text-red-500 hover:text-red-600 transition-colors"
+        <div className="flex items-center gap-2">
+          <Link
+            to={`/?date=${selectedDate}`}
+            className="btn-press text-sm text-orange-500 hover:text-orange-600 transition-colors"
           >
-            清空
-          </button>
-        ) : (
-          <div />
-        )}
+            添加菜品
+          </Link>
+          {data && data.count > 0 && (
+            <button
+              onClick={() => setShowClearConfirm(true)}
+              className="btn-press text-sm text-red-500 hover:text-red-600 transition-colors"
+            >
+              清空
+            </button>
+          )}
+        </div>
       </div>
 
       {/* 日期选择器 */}
@@ -184,7 +190,7 @@ export default function TodayMenu() {
           <ChefHat size={48} className="mx-auto mb-3" />
           <p>{isToday ? "今日菜单还是空的" : "这天没有菜单"}</p>
           <Link
-            to="/"
+            to={`/?date=${selectedDate}`}
             className="inline-block mt-3 text-orange-500 hover:underline"
           >
             去挑选菜品 →

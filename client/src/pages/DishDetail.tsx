@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate, Link, useSearchParams } from "react-router-dom";
 import {
   Clock,
   Users,
@@ -27,6 +27,8 @@ import type { Dish, UserIngredientItem, Comment } from "shared/types";
 
 export default function DishDetail() {
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
+  const menuDate = searchParams.get("date") || "";
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const [dish, setDish] = useState<Dish | null>(null);
@@ -93,12 +95,13 @@ export default function DishDetail() {
       .catch(() => {});
 
     if (user) {
+      const dateParam = menuDate ? `?date=${menuDate}` : "";
       api
         .get<{ data: { favorited: boolean } }>(`/favorites/check/${id}`)
         .then((res) => setFavorited(res.data.data.favorited))
         .catch(() => {});
       api
-        .get<{ data: { added: boolean } }>(`/menu/check/${id}`)
+        .get<{ data: { added: boolean } }>(`/menu/check/${id}${dateParam}`)
         .then((res) => setInMenu(res.data.data.added))
         .catch(() => {});
       api
@@ -110,7 +113,7 @@ export default function DishDetail() {
       setInMenu(false);
       setUserIngredients([]);
     }
-  }, [id, navigate, user]);
+  }, [id, navigate, user, menuDate]);
 
   const handleDelete = async () => {
     try {
@@ -145,11 +148,15 @@ export default function DishDetail() {
       return;
     }
     try {
+      const dateLabel = menuDate
+        ? new Date(menuDate).toLocaleDateString("zh-CN", { month: "long", day: "numeric" })
+        : "今日";
       const res = await api.post<{ data: { added: boolean } }>(
-        `/menu/${id}`
+        `/menu/${id}`,
+        menuDate ? { date: menuDate } : undefined
       );
       setInMenu(res.data.data.added);
-      toast.success(res.data.data.added ? "已加入今日菜单" : "已从今日菜单移除");
+      toast.success(res.data.data.added ? `已加入${dateLabel}菜单` : `已从${dateLabel}菜单移除`);
     } catch {
       toast.error("操作失败");
     }
@@ -212,7 +219,7 @@ export default function DishDetail() {
             }`}
           >
             {inMenu ? <Check size={16} /> : <ChefHat size={16} />}
-            <span>{inMenu ? "已加入今日菜单" : "加入今日菜单"}</span>
+            <span>{inMenu ? "已加入菜单" : "加入菜单"}</span>
           </button>
           {isOwner && (
             <>

@@ -10,10 +10,11 @@ import type { Dish } from "shared/types";
 
 interface DishCardProps {
   dish: Dish;
+  menuDate?: string;
   onMenuChange?: () => void;
 }
 
-export default function DishCard({ dish, onMenuChange }: DishCardProps) {
+export default function DishCard({ dish, menuDate, onMenuChange }: DishCardProps) {
   const [imgLoaded, setImgLoaded] = useState(false);
   const [inMenu, setInMenu] = useState(false);
   const [toggling, setToggling] = useState(false);
@@ -26,11 +27,12 @@ export default function DishCard({ dish, onMenuChange }: DishCardProps) {
       setInMenu(false);
       return;
     }
+    const params = menuDate ? `?date=${menuDate}` : "";
     api
-      .get<{ data: { added: boolean } }>(`/menu/check/${dish.id}`)
+      .get<{ data: { added: boolean } }>(`/menu/check/${dish.id}${params}`)
       .then((res) => setInMenu(res.data.data.added))
       .catch(() => {});
-  }, [user, dish.id]);
+  }, [user, dish.id, menuDate]);
 
   const handleToggleMenu = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -46,10 +48,11 @@ export default function DishCard({ dish, onMenuChange }: DishCardProps) {
 
     try {
       const res = await api.post<{ data: { added: boolean } }>(
-        `/menu/${dish.id}`
+        `/menu/${dish.id}`,
+        menuDate ? { date: menuDate } : undefined
       );
       setInMenu(res.data.data.added);
-      toast.success(res.data.data.added ? "已加入今日菜单" : "已从今日菜单移除");
+      toast.success(res.data.data.added ? "已加入菜单" : "已从菜单移除");
       onMenuChange?.();
     } catch {
       toast.error("操作失败");
@@ -61,7 +64,7 @@ export default function DishCard({ dish, onMenuChange }: DishCardProps) {
   return (
     <>
       <Link
-        to={`/dish/${dish.id}`}
+        to={`/dish/${dish.id}${menuDate ? `?date=${menuDate}` : ""}`}
         className="dish-card block bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm hover:shadow-lg border border-gray-100 dark:border-gray-700 relative"
       >
         <div className="aspect-[4/3] bg-gray-100 dark:bg-gray-700 overflow-hidden relative">
@@ -85,7 +88,6 @@ export default function DishCard({ dish, onMenuChange }: DishCardProps) {
             </div>
           )}
 
-          {/* 右上角 + 按钮 */}
           <button
             onClick={handleToggleMenu}
             className={`absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-all ${
@@ -126,7 +128,6 @@ export default function DishCard({ dish, onMenuChange }: DishCardProps) {
             </div>
           </div>
 
-          {/* 作者 + 标签 */}
           <div className="flex items-center justify-between mt-2">
             {dish.user && (
               <span className="flex items-center gap-1 text-xs text-gray-400">
