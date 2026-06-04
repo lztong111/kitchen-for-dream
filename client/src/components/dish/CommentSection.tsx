@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { MessageCircle, Star, Trash2, Send } from "lucide-react";
 import { useAuthStore } from "../../stores/auth";
 import LoginPrompt from "../ui/LoginPrompt";
+import ConfirmDialog from "../ui/ConfirmDialog";
 import api from "../../api";
 import type { Comment } from "shared/types";
 
@@ -18,6 +19,8 @@ export default function CommentSection({ dishId }: CommentSectionProps) {
   const [submitting, setSubmitting] = useState(false);
   const [page, setPage] = useState(1);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
   const limit = 10;
 
   const fetchComments = async () => {
@@ -62,15 +65,21 @@ export default function CommentSection({ dishId }: CommentSectionProps) {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("确定删除这条评论？")) return;
+  const handleDeleteClick = (id: number) => {
+    setDeleteId(id);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteId) return;
     try {
-      await api.delete(`/comments/${id}`);
-      setComments((prev) => prev.filter((c) => c.id !== id));
+      await api.delete(`/comments/${deleteId}`);
+      setComments((prev) => prev.filter((c) => c.id !== deleteId));
       setTotal((prev) => prev - 1);
     } catch {
       alert("删除失败");
     }
+    setDeleteId(null);
   };
 
   const totalPages = Math.ceil(total / limit);
@@ -171,7 +180,7 @@ export default function CommentSection({ dishId }: CommentSectionProps) {
                     </span>
                     {user && user.id === comment.user_id && (
                       <button
-                        onClick={() => handleDelete(comment.id)}
+                        onClick={() => handleDeleteClick(comment.id)}
                         className="text-gray-400 hover:text-red-500 transition-colors"
                       >
                         <Trash2 size={14} />
@@ -213,6 +222,20 @@ export default function CommentSection({ dishId }: CommentSectionProps) {
     <LoginPrompt
       open={showLoginPrompt}
       onClose={() => setShowLoginPrompt(false)}
+    />
+
+    <ConfirmDialog
+      open={showDeleteConfirm}
+      title="删除评论"
+      message="确定删除这条评论？删除后无法恢复。"
+      confirmText="删除"
+      cancelText="取消"
+      danger
+      onConfirm={handleDeleteConfirm}
+      onClose={() => {
+        setShowDeleteConfirm(false);
+        setDeleteId(null);
+      }}
     />
     </>
   );

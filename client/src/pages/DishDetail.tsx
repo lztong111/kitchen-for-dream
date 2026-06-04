@@ -16,6 +16,7 @@ import api from "../api";
 import StarRating from "../components/ui/StarRating";
 import Loading from "../components/ui/Loading";
 import LoginPrompt from "../components/ui/LoginPrompt";
+import ConfirmDialog from "../components/ui/ConfirmDialog";
 import CommentSection from "../components/dish/CommentSection";
 import { useAuthStore } from "../stores/auth";
 import type { Dish, UserIngredientItem } from "shared/types";
@@ -31,6 +32,7 @@ export default function DishDetail() {
   const [inMenu, setInMenu] = useState(false);
   const [userIngredients, setUserIngredients] = useState<UserIngredientItem[]>([]);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     api
@@ -67,7 +69,6 @@ export default function DishDetail() {
   }, [id, navigate, user]);
 
   const handleDelete = async () => {
-    if (!confirm("确定要删除这个菜品吗？")) return;
     try {
       await api.delete(`/dishes/${id}`);
       navigate("/");
@@ -160,7 +161,7 @@ export default function DishDetail() {
                 <span>编辑</span>
               </Link>
               <button
-                onClick={handleDelete}
+                onClick={() => setShowDeleteConfirm(true)}
                 className="btn-press flex items-center gap-1.5 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 active:bg-red-700 transition-colors"
               >
                 <Trash2 size={16} />
@@ -321,6 +322,17 @@ export default function DishDetail() {
       <LoginPrompt
         open={showLoginPrompt}
         onClose={() => setShowLoginPrompt(false)}
+      />
+
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        title="删除菜品"
+        message="确定要删除这个菜品吗？删除后无法恢复。"
+        confirmText="删除"
+        cancelText="取消"
+        danger
+        onConfirm={handleDelete}
+        onClose={() => setShowDeleteConfirm(false)}
       />
     </div>
   );

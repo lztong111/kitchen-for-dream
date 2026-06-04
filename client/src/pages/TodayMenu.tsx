@@ -10,6 +10,7 @@ import {
 import api from "../api";
 import Loading from "../components/ui/Loading";
 import LoginPrompt from "../components/ui/LoginPrompt";
+import ConfirmDialog from "../components/ui/ConfirmDialog";
 import { useAuthStore } from "../stores/auth";
 import type { Dish, DailyMenuResponse } from "shared/types";
 
@@ -19,6 +20,7 @@ export default function TodayMenu() {
   const [data, setData] = useState<DailyMenuResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   const fetchMenu = async () => {
     setLoading(true);
@@ -51,7 +53,6 @@ export default function TodayMenu() {
   };
 
   const handleClear = async () => {
-    if (!confirm("确定清空今日菜单？")) return;
     try {
       await api.delete("/menu/today");
       fetchMenu();
@@ -79,7 +80,7 @@ export default function TodayMenu() {
         </h1>
         {data && data.count > 0 ? (
           <button
-            onClick={handleClear}
+            onClick={() => setShowClearConfirm(true)}
             className="btn-press text-sm text-red-500 hover:text-red-600 transition-colors"
           >
             清空
@@ -222,6 +223,17 @@ export default function TodayMenu() {
           setShowLoginPrompt(false);
           if (!user) navigate("/");
         }}
+      />
+
+      <ConfirmDialog
+        open={showClearConfirm}
+        title="清空今日菜单"
+        message="确定清空今日菜单？清空后无法恢复。"
+        confirmText="清空"
+        cancelText="取消"
+        danger
+        onConfirm={handleClear}
+        onClose={() => setShowClearConfirm(false)}
       />
     </div>
   );
