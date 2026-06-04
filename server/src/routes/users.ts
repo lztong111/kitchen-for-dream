@@ -1,7 +1,7 @@
 import { Router, Response } from "express";
 import { db } from "../db/index.js";
 import { users, dishes, tags, categories } from "../db/schema.js";
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc, sql, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { AuthRequest, authMiddleware } from "../middleware/auth.js";
 
@@ -76,7 +76,7 @@ router.get("/:id/dishes", (req: AuthRequest, res: Response) => {
       dishTags = db
         .select()
         .from(tags)
-        .where(eq(tags.dish_id, dishIdsList[0]))
+        .where(inArray(tags.dish_id, dishIdsList))
         .all();
 
       const categoryIds = [
@@ -86,7 +86,7 @@ router.get("/:id/dishes", (req: AuthRequest, res: Response) => {
         dishCategories = db
           .select()
           .from(categories)
-          .where(eq(categories.id, categoryIds[0] as number))
+          .where(inArray(categories.id, categoryIds as number[]))
           .all();
       }
     }

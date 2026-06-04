@@ -1,7 +1,7 @@
 import { Router, Response } from "express";
 import { db } from "../db/index.js";
 import { comments, dishes, users } from "../db/schema.js";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, sql, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { AuthRequest, authMiddleware } from "../middleware/auth.js";
 
@@ -80,7 +80,7 @@ router.get("/dish/:dishId", (req: AuthRequest, res: Response) => {
       ? db
           .select({ id: users.id, username: users.username, avatar: users.avatar })
           .from(users)
-          .where(eq(users.id, userIds[0]))
+          .where(inArray(users.id, userIds))
           .all()
       : [];
 
@@ -128,7 +128,7 @@ router.get("/my", authMiddleware, (req: AuthRequest, res: Response) => {
       ? db
           .select({ id: dishes.id, name: dishes.name, image_url: dishes.image_url })
           .from(dishes)
-          .where(eq(dishes.id, dishIds[0]))
+          .where(inArray(dishes.id, dishIds))
           .all()
       : [];
 

@@ -9,7 +9,7 @@ import {
   tags,
   categories,
 } from "../db/schema.js";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, sql, inArray } from "drizzle-orm";
 import { AuthRequest, authMiddleware } from "../middleware/auth.js";
 
 const router = Router();
@@ -92,10 +92,10 @@ router.get("/today", authMiddleware, (req: AuthRequest, res: Response) => {
     }
 
     // 获取菜品详情
-    const dishList = db.select().from(dishes).where(eq(dishes.id, dishIds[0])).all();
+    const dishList = db.select().from(dishes).where(inArray(dishes.id, dishIds)).all();
 
     // 获取步骤
-    const allSteps = db.select().from(steps).where(eq(steps.dish_id, dishIds[0])).all();
+    const allSteps = db.select().from(steps).where(inArray(steps.dish_id, dishIds)).all();
 
     // 获取食材
     const allDishIngredients = db
@@ -110,11 +110,11 @@ router.get("/today", authMiddleware, (req: AuthRequest, res: Response) => {
       })
       .from(dish_ingredients)
       .leftJoin(ingredients, eq(dish_ingredients.ingredient_id, ingredients.id))
-      .where(eq(dish_ingredients.dish_id, dishIds[0]))
+      .where(inArray(dish_ingredients.dish_id, dishIds))
       .all();
 
     // 获取标签
-    const allTags = db.select().from(tags).where(eq(tags.dish_id, dishIds[0])).all();
+    const allTags = db.select().from(tags).where(inArray(tags.dish_id, dishIds)).all();
 
     // 获取分类
     const categoryIds = [...new Set(dishList.map((d) => d.category_id).filter(Boolean))];
@@ -123,7 +123,7 @@ router.get("/today", authMiddleware, (req: AuthRequest, res: Response) => {
       dishCategories = db
         .select()
         .from(categories)
-        .where(eq(categories.id, categoryIds[0] as number))
+        .where(inArray(categories.id, categoryIds as number[]))
         .all();
     }
 

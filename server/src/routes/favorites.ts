@@ -1,7 +1,7 @@
 import { Router, Response } from "express";
 import { db } from "../db/index.js";
 import { favorites, dishes, tags, categories, users } from "../db/schema.js";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, sql, inArray } from "drizzle-orm";
 import { AuthRequest, authMiddleware } from "../middleware/auth.js";
 
 const router = Router();
@@ -72,14 +72,14 @@ router.get("/", authMiddleware, (req: AuthRequest, res: Response) => {
       return;
     }
 
-    const dishList = db.select().from(dishes).where(eq(dishes.id, dishIds[0])).all();
+    const dishList = db.select().from(dishes).where(inArray(dishes.id, dishIds)).all();
 
-    const dishTags = db.select().from(tags).where(eq(tags.dish_id, dishIds[0])).all();
+    const dishTags = db.select().from(tags).where(inArray(tags.dish_id, dishIds)).all();
 
     const categoryIds = [...new Set(dishList.map((d) => d.category_id).filter(Boolean))];
     let dishCategories: typeof categories.$inferSelect[] = [];
     if (categoryIds.length > 0) {
-      dishCategories = db.select().from(categories).where(eq(categories.id, categoryIds[0] as number)).all();
+      dishCategories = db.select().from(categories).where(inArray(categories.id, categoryIds as number[])).all();
     }
 
     const enrichedDishes = dishList.map((dish) => ({
