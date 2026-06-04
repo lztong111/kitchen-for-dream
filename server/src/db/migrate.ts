@@ -67,6 +67,30 @@ export function migrate() {
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
+    CREATE TABLE IF NOT EXISTS daily_menus (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id),
+      dish_id INTEGER NOT NULL REFERENCES dishes(id) ON DELETE CASCADE,
+      date TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS comments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id),
+      dish_id INTEGER NOT NULL REFERENCES dishes(id) ON DELETE CASCADE,
+      content TEXT NOT NULL,
+      rating INTEGER,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS user_ingredients (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id),
+      ingredient_id INTEGER NOT NULL REFERENCES ingredients(id),
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
     CREATE INDEX IF NOT EXISTS idx_dishes_user_id ON dishes(user_id);
     CREATE INDEX IF NOT EXISTS idx_dishes_category_id ON dishes(category_id);
     CREATE INDEX IF NOT EXISTS idx_steps_dish_id ON steps(dish_id);
@@ -76,6 +100,12 @@ export function migrate() {
     CREATE INDEX IF NOT EXISTS idx_favorites_user_id ON favorites(user_id);
     CREATE INDEX IF NOT EXISTS idx_favorites_dish_id ON favorites(dish_id);
     CREATE UNIQUE INDEX IF NOT EXISTS idx_favorites_unique ON favorites(user_id, dish_id);
+    CREATE INDEX IF NOT EXISTS idx_daily_menus_user_date ON daily_menus(user_id, date);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_daily_menus_unique ON daily_menus(user_id, dish_id, date);
+    CREATE INDEX IF NOT EXISTS idx_comments_dish_id ON comments(dish_id);
+    CREATE INDEX IF NOT EXISTS idx_comments_user_id ON comments(user_id);
+    CREATE INDEX IF NOT EXISTS idx_user_ingredients_user_id ON user_ingredients(user_id);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_user_ingredients_unique ON user_ingredients(user_id, ingredient_id);
   `);
 
   console.log("Database migration completed!");

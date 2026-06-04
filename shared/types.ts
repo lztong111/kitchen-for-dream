@@ -95,3 +95,28 @@ export interface ApiResponse<T = unknown> {
   data?: T;
   message?: string;
 }
+
+export interface Comment {
+  id: number;
+  user_id: number;
+  dish_id: number;
+  content: string;
+  rating: number | null;
+  created_at: string;
+  user?: User;
+  dish?: { id: number; name: string; image_url: string | null };
+}
+
+export interface DailyMenuResponse {
+  dishes: Dish[];
+  total_cook_time: number;
+  ingredients_summary: { name: string; amounts: string[] }[];
+  count: number;
+}
+
+export interface UserIngredientItem {
+  id: number;
+  ingredient_id: number;
+  ingredient_name: string;
+  ingredient_category: string | null;
+}

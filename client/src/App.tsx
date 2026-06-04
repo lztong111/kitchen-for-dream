@@ -7,6 +7,8 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import UserProfile from "./pages/UserProfile";
 import Settings from "./pages/Settings";
+import TodayMenu from "./pages/TodayMenu";
+import Pantry from "./pages/Pantry";
 
 export default function App() {
   return (
@@ -18,6 +20,8 @@ export default function App() {
         <Route path="dish/:id/edit" element={<DishEditor />} />
         <Route path="user/:id" element={<UserProfile />} />
         <Route path="settings" element={<Settings />} />
+        <Route path="menu/today" element={<TodayMenu />} />
+        <Route path="pantry" element={<Pantry />} />
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />
       </Route>

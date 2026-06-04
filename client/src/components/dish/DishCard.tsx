@@ -1,21 +1,53 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { Clock, Users } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Clock, Users, Plus, Check } from "lucide-react";
 import StarRating from "../ui/StarRating";
+import { useAuthStore } from "../../stores/auth";
+import api from "../../api";
 import type { Dish } from "shared/types";
 
 interface DishCardProps {
   dish: Dish;
+  onMenuChange?: () => void;
 }
 
-export default function DishCard({ dish }: DishCardProps) {
+export default function DishCard({ dish, onMenuChange }: DishCardProps) {
   const [imgLoaded, setImgLoaded] = useState(false);
+  const [inMenu, setInMenu] = useState(false);
+  const [checking, setChecking] = useState(false);
+  const { user } = useAuthStore();
+  const navigate = useNavigate();
   const imageUrl = dish.image_url || null;
+
+  const handleToggleMenu = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+
+    if (checking) return;
+    setChecking(true);
+
+    try {
+      const res = await api.post<{ data: { added: boolean } }>(
+        `/menu/${dish.id}`
+      );
+      setInMenu(res.data.data.added);
+      onMenuChange?.();
+    } catch {
+      alert("操作失败");
+    } finally {
+      setChecking(false);
+    }
+  };
 
   return (
     <Link
       to={`/dish/${dish.id}`}
-      className="dish-card block bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg border border-gray-100"
+      className="dish-card block bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg border border-gray-100 relative"
     >
       <div className="aspect-[4/3] bg-gray-100 overflow-hidden relative">
         {imageUrl ? (
@@ -78,6 +110,18 @@ export default function DishCard({ dish }: DishCardProps) {
           </div>
         )}
       </div>
+
+      {/* 右下角 + 按钮 */}
+      <button
+        onClick={handleToggleMenu}
+        className={`absolute bottom-3 right-3 w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-all ${
+          inMenu
+            ? "bg-green-500 text-white"
+            : "bg-white text-orange-500 hover:bg-orange-50 border border-gray-200"
+        }`}
+      >
+        {inMenu ? <Check size={16} /> : <Plus size={16} />}
+      </button>
     </Link>
   );
 }

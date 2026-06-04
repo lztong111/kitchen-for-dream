@@ -8,12 +8,16 @@ import {
   Trash2,
   UtensilsCrossed,
   Heart,
+  ChefHat,
+  Check,
+  X,
 } from "lucide-react";
 import api from "../api";
 import StarRating from "../components/ui/StarRating";
 import Loading from "../components/ui/Loading";
+import CommentSection from "../components/dish/CommentSection";
 import { useAuthStore } from "../stores/auth";
-import type { Dish } from "shared/types";
+import type { Dish, UserIngredientItem } from "shared/types";
 
 export default function DishDetail() {
   const { id } = useParams<{ id: string }>();
@@ -23,6 +27,8 @@ export default function DishDetail() {
   const [loading, setLoading] = useState(true);
   const [favorited, setFavorited] = useState(false);
   const [favCount, setFavCount] = useState(0);
+  const [inMenu, setInMenu] = useState(false);
+  const [userIngredients, setUserIngredients] = useState<UserIngredientItem[]>([]);
 
   useEffect(() => {
     api
@@ -40,6 +46,16 @@ export default function DishDetail() {
       api
         .get<{ data: { favorited: boolean } }>(`/favorites/check/${id}`)
         .then((res) => setFavorited(res.data.data.favorited))
+        .catch(() => {});
+
+      api
+        .get<{ data: { added: boolean } }>(`/menu/check/${id}`)
+        .then((res) => setInMenu(res.data.data.added))
+        .catch(() => {});
+
+      api
+        .get<{ data: { items: UserIngredientItem[] } }>(`/user-ingredients`)
+        .then((res) => setUserIngredients(res.data.data.items))
         .catch(() => {});
     }
   }, [id, navigate, user]);
@@ -70,10 +86,26 @@ export default function DishDetail() {
     }
   };
 
+  const handleToggleMenu = async () => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    try {
+      const res = await api.post<{ data: { added: boolean } }>(
+        `/menu/${id}`
+      );
+      setInMenu(res.data.data.added);
+    } catch {
+      alert("操作失败");
+    }
+  };
+
   if (loading) return <Loading />;
   if (!dish) return null;
 
   const isOwner = user && user.id === dish.user_id;
+  const userIngredientIds = new Set(userIngredients.map((i) => i.ingredient_id));
 
   return (
     <div className="max-w-4xl mx-auto animate-fade-in">
@@ -98,6 +130,18 @@ export default function DishDetail() {
           >
             <Heart size={16} fill={favorited ? "currentColor" : "none"} />
             <span>{favCount > 0 ? favCount : "收藏"}</span>
+          </button>
+
+          <button
+            onClick={handleToggleMenu}
+            className={`btn-press flex items-center gap-1.5 px-4 py-2 rounded-lg transition-colors ${
+              inMenu
+                ? "bg-green-50 text-green-600 border border-green-200"
+                : "bg-gray-50 text-gray-500 border border-gray-200 hover:text-orange-500"
+            }`}
+          >
+            {inMenu ? <Check size={16} /> : <ChefHat size={16} />}
+            <span>{inMenu ? "已加入今日菜单" : "加入今日菜单"}</span>
           </button>
 
           {isOwner && (
@@ -188,35 +232,56 @@ export default function DishDetail() {
         )}
       </div>
 
-      {/* 食材清单 */}
+      {/* 食材清单（含已有/缺少标注） */}
       {dish.dish_ingredients && dish.dish_ingredients.length > 0 && (
         <div className="bg-white rounded-xl p-6 mb-6 shadow-sm">
           <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
             <UtensilsCrossed size={20} />
             所需食材
           </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {dish.dish_ingredients.map((di) => (
-              <div
-                key={di.id}
-                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-              >
-                <span className="text-gray-700">
-                  {di.ingredient?.name}
-                </span>
-                <span className="text-sm text-gray-400">
-                  {di.amount}
-                  {di.unit}
-                </span>
-              </div>
-            ))}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {dish.dish_ingredients.map((di) => {
+              const hasIt = userIngredientIds.has(di.ingredient_id);
+              return (
+                <div
+                  key={di.id}
+                  className={`flex items-center justify-between p-3 rounded-lg ${
+                    user ? (hasIt ? "bg-green-50" : "bg-red-50") : "bg-gray-50"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    {user && (
+                      hasIt ? (
+                        <Check size={16} className="text-green-500" />
+                      ) : (
+                        <X size={16} className="text-red-400" />
+                      )
+                    )}
+                    <span className="text-gray-700">
+                      {di.ingredient?.name}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-400">
+                      {di.amount}
+                      {di.unit}
+                    </span>
+                    {user && (
+                      <span className={`text-xs ${hasIt ? "text-green-600" : "text-red-400"}`}>
+                        {hasIt ? "已有" : "缺少"}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
 
       {/* 制作步骤 */}
       {dish.steps && dish.steps.length > 0 && (
-        <div className="bg-white rounded-xl p-6 shadow-sm">
+        <div className="bg-white rounded-xl p-6 mb-6 shadow-sm">
           <h2 className="text-lg font-semibold text-gray-800 mb-4">
             制作步骤
           </h2>
@@ -243,6 +308,9 @@ export default function DishDetail() {
           </div>
         </div>
       )}
+
+      {/* 评论区 */}
+      <CommentSection dishId={parseInt(id!)} />
     </div>
   );
 }

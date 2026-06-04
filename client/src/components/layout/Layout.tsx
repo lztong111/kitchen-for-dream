@@ -1,6 +1,6 @@
 import { Outlet, Link, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
-import { ChefHat, Plus, LogIn, LogOut, User } from "lucide-react";
+import { ChefHat, Plus, LogIn, LogOut, User, UtensilsCrossed, Refrigerator } from "lucide-react";
 import { useAuthStore } from "../../stores/auth";
 
 export default function Layout() {
@@ -28,6 +28,20 @@ export default function Layout() {
           <nav className="flex items-center gap-3">
             {user ? (
               <>
+                <Link
+                  to="/menu/today"
+                  className="flex items-center gap-1.5 px-3 py-2 text-gray-600 hover:text-orange-500 transition-colors"
+                >
+                  <UtensilsCrossed size={18} />
+                  <span className="text-sm">今日菜单</span>
+                </Link>
+                <Link
+                  to="/pantry"
+                  className="flex items-center gap-1.5 px-3 py-2 text-gray-600 hover:text-orange-500 transition-colors"
+                >
+                  <Refrigerator size={18} />
+                  <span className="text-sm">食材库</span>
+                </Link>
                 <Link
                   to="/dish/new"
                   className="btn-press flex items-center gap-1.5 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 active:bg-orange-700 transition-colors"

@@ -9,6 +9,9 @@ import authRoutes from "./routes/auth.js";
 import dishRoutes from "./routes/dishes.js";
 import userRoutes from "./routes/users.js";
 import favoriteRoutes from "./routes/favorites.js";
+import menuRoutes from "./routes/menu.js";
+import commentRoutes from "./routes/comments.js";
+import userIngredientRoutes from "./routes/userIngredients.js";
 import optionRoutes from "./routes/options.js";
 import uploadRoutes from "./routes/upload.js";
 
@@ -26,6 +29,9 @@ app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/dishes", dishRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/favorites", favoriteRoutes);
+app.use("/api/menu", menuRoutes);
+app.use("/api/comments", commentRoutes);
+app.use("/api/user-ingredients", userIngredientRoutes);
 app.use("/api", optionRoutes);
 app.use("/api/upload", uploadLimiter, uploadRoutes);
 

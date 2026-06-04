@@ -2,22 +2,22 @@ import { db } from "./index.js";
 import { categories, ingredients } from "./schema.js";
 
 const defaultCategories = [
-  { name: "家常菜", icon: "🏠" },
-  { name: "川菜", icon: "🌶️" },
-  { name: "粤菜", icon: "🥘" },
-  { name: "湘菜", icon: "🔥" },
-  { name: "鲁菜", icon: "🍳" },
-  { name: "苏菜", icon: "🥢" },
-  { name: "浙菜", icon: "🐟" },
-  { name: "闽菜", icon: "🦐" },
-  { name: "徽菜", icon: "🍖" },
-  { name: "西餐", icon: "🥩" },
-  { name: "日料", icon: "🍣" },
-  { name: "韩餐", icon: "🍜" },
+  { name: "凉菜", icon: "🥒" },
+  { name: "热菜", icon: "🍳" },
+  { name: "汤羹", icon: "🍲" },
+  { name: "主食", icon: "🍚" },
+  { name: "面食", icon: "🍜" },
   { name: "甜点", icon: "🍰" },
   { name: "饮品", icon: "🧋" },
-  { name: "早餐", icon: "🥞" },
-  { name: "汤品", icon: "🍲" },
+  { name: "烧烤", icon: "🔥" },
+  { name: "鸡肉", icon: "🍗" },
+  { name: "鱼肉", icon: "🐟" },
+  { name: "牛肉", icon: "🥩" },
+  { name: "猪肉", icon: "🥓" },
+  { name: "羊肉", icon: "🍖" },
+  { name: "海鲜", icon: "🦐" },
+  { name: "蔬菜", icon: "🥬" },
+  { name: "豆制品", icon: "🧈" },
 ];
 
 const defaultIngredients = [
@@ -54,10 +54,16 @@ const defaultIngredients = [
 export function seed() {
   console.log("Seeding database...");
 
+  // 刷新分类
   const existingCategories = db.select().from(categories).all();
   if (existingCategories.length === 0) {
     db.insert(categories).values(defaultCategories).run();
     console.log(`Seeded ${defaultCategories.length} categories`);
+  } else {
+    // 更新分类：删除旧的，插入新的
+    db.delete(categories).run();
+    db.insert(categories).values(defaultCategories).run();
+    console.log(`Updated ${defaultCategories.length} categories`);
   }
 
   const existingIngredients = db.select().from(ingredients).all();

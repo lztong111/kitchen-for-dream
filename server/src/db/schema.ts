@@ -84,3 +84,45 @@ export const favorites = sqliteTable("favorites", {
     .notNull()
     .$defaultFn(() => new Date().toISOString()),
 });
+
+export const daily_menus = sqliteTable("daily_menus", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  user_id: integer("user_id")
+    .notNull()
+    .references(() => users.id),
+  dish_id: integer("dish_id")
+    .notNull()
+    .references(() => dishes.id, { onDelete: "cascade" }),
+  date: text("date").notNull(),
+  created_at: text("created_at")
+    .notNull()
+    .$defaultFn(() => new Date().toISOString()),
+});
+
+export const comments = sqliteTable("comments", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  user_id: integer("user_id")
+    .notNull()
+    .references(() => users.id),
+  dish_id: integer("dish_id")
+    .notNull()
+    .references(() => dishes.id, { onDelete: "cascade" }),
+  content: text("content").notNull(),
+  rating: integer("rating"),
+  created_at: text("created_at")
+    .notNull()
+    .$defaultFn(() => new Date().toISOString()),
+});
+
+export const user_ingredients = sqliteTable("user_ingredients", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  user_id: integer("user_id")
+    .notNull()
+    .references(() => users.id),
+  ingredient_id: integer("ingredient_id")
+    .notNull()
+    .references(() => ingredients.id),
+  created_at: text("created_at")
+    .notNull()
+    .$defaultFn(() => new Date().toISOString()),
+});
