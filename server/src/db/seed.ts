@@ -1,4 +1,4 @@
-import { db } from "./index.js";
+import { db, getRawDb } from "./index.js";
 import { categories, ingredients } from "./schema.js";
 
 const defaultCategories = [
@@ -53,15 +53,17 @@ const defaultIngredients = [
 
 export function seed() {
   console.log("Seeding database...");
+  const sqlite = getRawDb();
 
-  // 刷新分类
+  // 刷新分类（临时关闭外键约束）
   const existingCategories = db.select().from(categories).all();
   if (existingCategories.length === 0) {
     db.insert(categories).values(defaultCategories).run();
     console.log(`Seeded ${defaultCategories.length} categories`);
   } else {
-    // 更新分类：删除旧的，插入新的
+    sqlite.pragma("foreign_keys = OFF");
     db.delete(categories).run();
+    sqlite.pragma("foreign_keys = ON");
     db.insert(categories).values(defaultCategories).run();
     console.log(`Updated ${defaultCategories.length} categories`);
   }
