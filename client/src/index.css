@@ -35,6 +35,16 @@ body {
   animation: fadeIn 0.3s ease-out;
 }
 
+/* 页面切换动画 */
+@keyframes pageEnter {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.page-enter {
+  animation: pageEnter 0.35s ease-out;
+}
+
 /* 卡片悬浮效果 */
 .dish-card {
   transition: transform 0.2s ease, box-shadow 0.2s ease;

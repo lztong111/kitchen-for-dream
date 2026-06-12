@@ -44,6 +44,10 @@ export default function DishDetail() {
   const [relatedDishes, setRelatedDishes] = useState<Dish[]>([]);
 
   useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [id]);
+
+  useEffect(() => {
     // 获取菜品详情
     api
       .get<{ data: Dish }>(`/dishes/${id}`)
@@ -181,7 +185,7 @@ export default function DishDetail() {
   const userIngredientIds = new Set(userIngredients.map((i) => i.ingredient_id));
 
   return (
-    <div className="max-w-4xl mx-auto animate-fade-in">
+    <div key={id} className="max-w-4xl mx-auto page-enter">
       {/* 顶部操作栏 */}
       <div className="flex items-center justify-between mb-6">
         <button
