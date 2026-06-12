@@ -18,6 +18,7 @@ const defaultCategories = [
   { name: "海鲜", icon: "🦐" },
   { name: "蔬菜", icon: "🥬" },
   { name: "豆制品", icon: "🧈" },
+  { name: "减脂餐", icon: "🥗" },
 ];
 
 const defaultIngredients = [
