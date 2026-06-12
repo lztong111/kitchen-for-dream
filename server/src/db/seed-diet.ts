@@ -1,6 +1,6 @@
 import { db, getRawDb } from "./index.js";
 import { dishes, steps, dish_ingredients, tags, users, categories } from "./schema.js";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
 // 减脂餐分类 ID = 17
@@ -449,8 +449,30 @@ const dietDishes: DishData[] = [
 function addDietDishes() {
   console.log(`Adding ${dietDishes.length} diet dishes...`);
 
+  // 查询减脂餐分类的实际 ID
+  const dietCategory = db.select().from(categories).where(eq(categories.name, "减脂餐")).get();
+  if (!dietCategory) {
+    console.error("减脂餐分类不存在，请先运行 seed.ts");
+    process.exit(1);
+  }
+  const categoryId = dietCategory.id;
+  console.log(`减脂餐分类 ID: ${categoryId}`);
+
   const sqlite = getRawDb();
   sqlite.pragma("foreign_keys = OFF");
+
+  // 清除已有的减脂餐菜品
+  const existingCount = db.select({ count: sql`count(*)` }).from(dishes).where(eq(dishes.category_id, categoryId)).get();
+  if (existingCount && existingCount.count > 0) {
+    console.log(`清除已有的 ${existingCount.count} 道减脂餐...`);
+    const existingDishes = db.select({ id: dishes.id }).from(dishes).where(eq(dishes.category_id, categoryId)).all();
+    for (const d of existingDishes) {
+      db.delete(tags).where(eq(tags.dish_id, d.id)).run();
+      db.delete(dish_ingredients).where(eq(dish_ingredients.dish_id, d.id)).run();
+      db.delete(steps).where(eq(steps.dish_id, d.id)).run();
+    }
+    db.delete(dishes).where(eq(dishes.category_id, categoryId)).run();
+  }
 
   let inserted = 0;
   for (const dish of dietDishes) {
@@ -459,7 +481,7 @@ function addDietDishes() {
       name: dish.name,
       description: dish.desc,
       image_url: null,
-      category_id: DIET_CAT_ID,
+      category_id: categoryId,
       cook_time: dish.time,
       difficulty: dish.diff,
       servings: dish.serv,
