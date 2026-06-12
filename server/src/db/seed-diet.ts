@@ -1,15 +1,23 @@
 import { db, getRawDb } from "./index.js";
 import { dishes, steps, dish_ingredients, tags, users, categories } from "./schema.js";
 import { eq } from "drizzle-orm";
+import bcrypt from "bcryptjs";
 
 // 减脂餐分类 ID = 17
 const DIET_CAT_ID = 17;
 
-// 获取系统用户
-const systemUser = db.select().from(users).where(eq(users.username, "system")).get();
+// 获取或创建系统用户
+let systemUser = db.select().from(users).where(eq(users.username, "system")).get();
 if (!systemUser) {
-  console.error("System user not found. Run seed-dishes.ts first.");
-  process.exit(1);
+  console.log("System user not found, creating...");
+  const hashedPassword = await bcrypt.hash("system123456", 10);
+  const result = db.insert(users).values({
+    username: "system",
+    password: hashedPassword,
+    avatar: null,
+  }).returning().get();
+  systemUser = result;
+  console.log("Created system user, id:", systemUser.id);
 }
 const userId = systemUser.id;
 
