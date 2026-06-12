@@ -129,12 +129,19 @@ export default function DishCard({ dish, menuDate, onMenuChange }: DishCardProps
           </div>
 
           <div className="flex items-center justify-between mt-2">
-            {dish.user && (
-              <span className="flex items-center gap-1 text-xs text-gray-400">
-                <User size={10} />
-                {dish.user.username}
-              </span>
-            )}
+            <div className="flex items-center gap-2">
+              {dish.category && (
+                <span className="px-1.5 py-0.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded text-xs">
+                  {dish.category.icon} {dish.category.name}
+                </span>
+              )}
+              {dish.user && (
+                <span className="flex items-center gap-1 text-xs text-gray-400">
+                  <User size={10} />
+                  {dish.user.username}
+                </span>
+              )}
+            </div>
             {dish.tags && dish.tags.length > 0 && (
               <div className="flex flex-wrap gap-1">
                 {dish.tags.slice(0, 2).map((tag) => (
